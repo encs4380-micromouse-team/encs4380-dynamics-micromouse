@@ -1,200 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Dynamic Characteristics Toolkit</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
+        /* ===== 1. The Whole Page ===== */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --blue-dark: #235d99;
+            --gray: #64748b;
+            --bg: #f4f7fb;
+            --text: #243047;
         }
-
+        * { box-sizing: border-box; }
         body {
-            margin: 0; 
+            margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f4f7fb;
-            color: #243047;
+            background: var(--bg);
+            color: var(--text);
         }
-        
-        .container {
-            max-width: 1250px;
-            margin: 0 auto;
-            padding: 35px 25px;
-        }
+        .container { max-width: 1250px; margin: 0 auto; padding: 35px 25px; }
 
-        .header {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-    
-        .header h1 {
-            color: #17365d;
-            font-size: 36px;
-            margin-bottom: 12px;
-        }
-    
-        .header h2 {
-            color: #3478c0;
-            font-size: 24px;
-        }
-    
-        .header p {
-            color: #64748b;
-            font-size: 16px;
-        }
-    
-        .dashboard {
-            display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
-            gap: 25px;
-            align-items: start;
-        }
-    
+        /* ===== 2. Header ===== */
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { color: var(--navy); font-size: 36px; margin-bottom: 12px; }
+        .header h2 { color: var(--blue); font-size: 24px; }
+        .header p  { color: var(--gray); font-size: 16px; }
+
+        /* ===== 3. Cards and layout ===== */
         .card {
             background: white;
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
         }
-    
-        .card h3 {
-            margin-top: 0 ;
-            color:  #17365d;
-        }
-    
-        .control-group {
-             margin-bottom: 25px;
-        }
-    
-        .control-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-    
-        input[type="range"] {
-            width: 100%;
-            accent-color: #3478c0;
-            cursor: pointer;
-        }
-    
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            background: white;
-            font-size: 15px;
-        }
-    
-        .model-card {
-            margin-bottom: 25px;
-            text-align: center;
-        }
-    
-        .model-card p {
-            font-size: 20px;
-        }
-    
-        #responseGraph {
-            width: 100%;
-            height: 450px;
-        }
-    
-        @media (max-width: 850px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 20px 12px;
-            }
-            .header h1 {
-                font-size: 27px;
-            }
-            .card {
-                padding: 18px;
-            }
-        }
+        .card h3 { margin-top: 0; color: var(--navy); }
+        .model-card { margin-bottom: 25px; text-align: center; }
+        .model-card p { font-size: 20px; }
+        .extra-card { margin-top: 25px; }
+        .extra-card p { line-height: 1.6; }
 
-        .extra-card {
-            margin-top: 25px;
-        }
-
-        .extra-card p {
-            line-height: 1.6;
-        }
-
-        .prediction-grid {
+        /* Controls (left) and graph (right) */
+        .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 16px;
+            grid-template-columns: 300px minmax(0, 1fr);
+            gap: 25px;
+            align-items: start;
         }
 
-        .prediction-grid label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
+        /* ===== 4. Controls ===== */
+        .control-group { margin-bottom: 25px; }
+        .control-group label { display: block; font-weight: bold; margin-bottom: 12px; }
+        input[type="range"] { width: 100%; accent-color: var(--blue); cursor: pointer; }
 
-        .prediction-grid input {
+        select, .prediction-grid input {
             width: 100%;
             padding: 10px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 15px;
         }
+        select { background: white; }
 
-        .action-button {
-            margin-top: 16px;
-            background: #3478c0;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 11px 18px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .action-button:hover {
-            background: #235d99;
-        }
-
-        .feedback {
-            margin-top: 16px;
-            padding: 14px;
-            background: #eef5ff;
-            border-radius: 8px;
-            line-height: 1.7;
-        }
-
-        .feedback[hidden] {
-            display: none;
-        }
-
-        .error-message {
-            color: #b42318;
-            font-weight: bold;
-        }
-
-        .success-message {
-            color: #18794e;
-            font-weight: bold;
-        }
-
-        #errorGraph {
-            width: 100%;
-            height: 400px;
-        }
-
-
-
+        /* ===== 5. Buttons ===== */
         .back-button {
             display: inline-block;
-            background-color: #3478c0;
+            background: var(--blue);
             color: white;
             text-decoration: none;
             padding: 10px 18px;
@@ -203,828 +78,396 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        
-        .back-button:hover {
-            background-color: #235d99;
+        .action-button {
+            margin-top: 16px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 18px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .back-button:hover, .action-button:hover { background: var(--blue-dark); }
+
+        /* ===== 6. Graphs ===== */
+        #responseGraph { width: 100%; height: 450px; }
+        #errorGraph    { width: 100%; height: 400px; }
+
+        /* ===== 7. Prediction and validation ===== */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+        }
+        .prediction-grid label { display: block; font-weight: bold; margin-bottom: 8px; }
+
+        .feedback {
+            margin-top: 16px;
+            padding: 14px;
+            background: #eef5ff;
+            border-radius: 8px;
+            line-height: 1.7;
+        }
+        .feedback[hidden] { display: none; }
+        .error-message   { color: #b42318; font-weight: bold; }
+        .success-message { color: #18794e; font-weight: bold; }
+
+        /* ===== 8. Small screens ===== */
+        @media (max-width: 850px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 27px; }
+            .card { padding: 18px; }
         }
     </style>
 </head>
 
-    
 <body>
 <div class="container">
 
-    <!-- Back to Home -->
     <a href="index.html" class="back-button">← Back to Home</a>
 
-    <!-- Page header  --> 
     <div class="header">
         <h1>Dynamic Characteristics Toolkit</h1>
         <h2>Module 1: First-Order Time Response</h2>
-
-        <p>
-            Explore how gain (K) and time constant (τ)
-            affect the response of a first-order system.
-        </p>
+        <p>Explore how gain (K) and time constant (τ) affect the response of a first-order system.</p>
     </div>
 
-    <!-- System model -->
     <div class="card model-card">
         <h3>System Model</h3>
         <p>τ dy/dt + y = Kx</p>
     </div>
 
-    <!--main dashboard  -->
+    <!-- Controls and response graph -->
     <div class="dashboard">
 
-        <!-- controls card -->
         <div class="card">
-
             <h3>Controls</h3>
 
             <div class="control-group">
-                <label for="gain">
-                    Gain (K):
-                    <span id="gainValue">1.0</span>
-                </label>
-
-                <input type="range"
-                       id="gain"
-                       min="0.5"
-                       max="5"
-                       step="0.1"
-                       value="1">
+                <label for="gain">Gain (K): <span id="gainValue">1.0</span></label>
+                <input type="range" id="gain" min="0.5" max="5" step="0.1" value="1">
             </div>
 
             <div class="control-group">
-                <label for="tau">
-                    Time Constant (τ):
-                    <span id="tauValue">1.0</span> s
-                </label>
-
-                <input type="range"
-                       id="tau"
-                       min="0.1"
-                       max="10"
-                       step="0.1"
-                       value="1">
+                <label for="tau">Time Constant (τ): <span id="tauValue">1.0</span> s</label>
+                <input type="range" id="tau" min="0.1" max="10" step="0.1" value="1">
             </div>
 
             <div class="control-group">
                 <label for="inputType">Input Type:</label>
-
                 <select id="inputType">
                     <option value="step">Step Input</option>
                     <option value="ramp">Ramp Input</option>
                 </select>
             </div>
-
         </div>
 
-        <!-- graph card-->
         <div class="card">
-
             <h3>System Response</h3>
-
             <div id="responseGraph"></div>
 
+            <!-- Shown only for the ramp input -->
             <div id="rampAnalysis" style="display: none; margin-top: 20px;">
-        
-            <h3>Ramp Analysis</h3>
-        
-            <p>
-                Time Constant:
-                <strong><span id="rampTau">0</span> s</strong>
-            </p>
-        
-            <p>
-                Asymptotic Ramp Lag:
-                <strong><span id="rampLag">0</span> s</strong>
-            </p>
-        
-            <p>
-                Steady-State Tracking Error:
-                <strong><span id="rampError">0</span></strong>
-            </p>
-        
-        </div>
-
+                <h3>Ramp Analysis</h3>
+                <p>Time Constant: <strong><span id="rampTau">0</span> s</strong></p>
+                <p>Asymptotic Ramp Lag: <strong><span id="rampLag">0</span> s</strong></p>
+                <p>Steady-State Tracking Error: <strong><span id="rampError">0</span></strong></p>
+            </div>
         </div>
 
     </div>
-
 </div>
 
+<!-- Log error plot (shown only for the step input) -->
+<div class="card extra-card" id="errorCard">
+    <h3>Logarithmic Error-Fraction Plot</h3>
+    <p>
+        For a unit step, the normalized error fraction is
+        E(t) = (K − y(t))/K = exp(−t/τ).
+        The vertical axis uses a logarithmic scale.
+    </p>
+    <p>
+        Slope of <strong>ln(E(t))</strong> versus time:
+        <strong><span id="errorSlope">−1.000</span> s⁻¹</strong>
+    </p>
+    <div id="errorGraph"></div>
+</div>
 
- <div class="card extra-card" id="errorCard">
+<!-- Predict, then check -->
+<div class="card extra-card">
+    <h3>Predict, Then Check</h3>
+    <p>
+        Choose a time between 0 and 30 seconds, predict the system output at that time,
+        then check your prediction against the model.
+        Your prediction is not revealed until you click Check Prediction.
+    </p>
 
-        <h3>Logarithmic Error-Fraction Plot</h3>
-
-        <p>
-            For a unit step, the normalized error fraction is
-            E(t) = (K − y(t))/K = exp(−t/τ).
-            The vertical axis uses a logarithmic scale.
-        </p>
-
-        <p>
-            Slope of <strong>ln(E(t))</strong> versus time:
-            <strong>
-                <span id="errorSlope">−1.000</span> s⁻¹
-            </strong>
-        </p>
-
-        <div id="errorGraph"></div>
-
-    </div>
-
-
-    <!-- NEW: Predict, Then Check -->
-    <div class="card extra-card">
-
-        <h3>Predict, Then Check</h3>
-
-        <p>
-            Choose a time between 0 and 30 seconds,
-            predict the system output at that time,
-            then check your prediction against the model.
-            Your prediction is not revealed until you
-            click Check Prediction.
-        </p>
-
-        <div class="prediction-grid">
-
-            <div>
-
-                <label for="predictionTime">
-                    Time t (seconds)
-                </label>
-
-                <input
-                    type="number"
-                    id="predictionTime"
-                    min="0"
-                    max="30"
-                    step="any"
-                    value="2"
-                >
-
-            </div>
-
-            <div>
-
-                <label for="predictedOutput">
-                    Your predicted output y(t)
-                </label>
-
-                <input
-                    type="number"
-                    id="predictedOutput"
-                    step="any"
-                    placeholder="Enter your prediction"
-                >
-
-            </div>
-
+    <div class="prediction-grid">
+        <div>
+            <label for="predictionTime">Time t (seconds)</label>
+            <input type="number" id="predictionTime" min="0" max="30" step="any" value="2">
         </div>
-
-        <button
-            type="button"
-            class="action-button"
-            id="checkPrediction"
-        >
-            Check Prediction
-        </button>
-
-        <div
-            class="feedback"
-            id="predictionFeedback"
-            role="status"
-            aria-live="polite"
-            hidden
-        ></div>
-
+        <div>
+            <label for="predictedOutput">Your predicted output y(t)</label>
+            <input type="number" id="predictedOutput" step="any" placeholder="Enter your prediction">
+        </div>
     </div>
 
+    <button type="button" class="action-button" id="checkPrediction">Check Prediction</button>
+    <div class="feedback" id="predictionFeedback" role="status" aria-live="polite" hidden></div>
+</div>
 
-    <!-- NEW: Validation Checks -->
-    <div class="card extra-card">
+<!-- Validation checks -->
+<div class="card extra-card">
+    <h3>Validation Checks</h3>
+    <p>Check the current parameters and verify the response against known first-order system properties.</p>
 
-        <h3>Validation Checks</h3>
-
-        <p>
-            Check the current parameters and verify
-            the response against known first-order
-            system properties.
-        </p>
-
-        <button
-            type="button"
-            class="action-button"
-            id="runValidation"
-        >
-            Run Validation Checks
-        </button>
-
-        <div
-            class="feedback"
-            id="validationFeedback"
-            role="status"
-            aria-live="polite"
-            hidden
-        ></div>
-
-    </div>
-
+    <button type="button" class="action-button" id="runValidation">Run Validation Checks</button>
+    <div class="feedback" id="validationFeedback" role="status" aria-live="polite" hidden></div>
 </div>
 
 <script>
-    //get the sliders and input selector 
-    const gainSlider = document.getElementById("gain");
-    const tauSlider = document.getElementById("tau");
-    const inputSelector = document.getElementById("inputType");
+    // ===== 1. Helpers =====
+    function $(id) {
+        return document.getElementById(id);
+    }
 
-    function updateGraph(){
+    // The 3 controls
+    const gainSlider = $("gain");
+    const tauSlider = $("tau");
+    const inputSelector = $("inputType");
+
+    // Shows a message in a feedback box. cssClass: "error-message", "success-message" or ""
+    function showMessage(box, text, cssClass) {
+        box.hidden = false;
+        box.className = "feedback " + cssClass;
+        box.textContent = text;
+    }
+
+    // ===== 2. Model formula (used by everything below) =====
+    // Step:  y = K (1 - e^(-t/τ))
+    // Ramp:  y = K (t - τ (1 - e^(-t/τ)))
+    function calculateOutput(t, k, tau, inputType) {
+        if (inputType === "step") {
+            return k * (1 - Math.exp(-t / tau));
+        }
+        return k * (t - tau * (1 - Math.exp(-t / tau)));
+    }
+
+    // ===== 3. Response graph =====
+    function updateGraph() {
         const k = parseFloat(gainSlider.value);
         const tau = parseFloat(tauSlider.value);
         const inputType = inputSelector.value;
 
-        document.getElementById("gainValue").textContent = k.toFixed(1);
-        document.getElementById("tauValue").textContent = tau.toFixed(1);
+        $("gainValue").textContent = k.toFixed(1);
+        $("tauValue").textContent = tau.toFixed(1);
 
-        // Ramp analysis
-        const rampAnalysis = document.getElementById("rampAnalysis");
-        
-        if (inputType === "ramp") {
-        
-            rampAnalysis.style.display = "block";
-        
-            // Calculate ramp lag and steady-state error
-            const rampLag = tau;
-            const steadyStateError = k * tau;
-        
-            document.getElementById("rampTau").textContent =
-                tau.toFixed(2);
-        
-            document.getElementById("rampLag").textContent =
-                rampLag.toFixed(2);
-        
-            document.getElementById("rampError").textContent =
-                steadyStateError.toFixed(2);
-        
-        } else {
-        
-            rampAnalysis.style.display = "none";
-        
+        // Ramp analysis box: lag = τ, steady-state error = Kτ
+        const isRamp = inputType === "ramp";
+        $("rampAnalysis").style.display = isRamp ? "block" : "none";
+        if (isRamp) {
+            $("rampTau").textContent = tau.toFixed(2);
+            $("rampLag").textContent = tau.toFixed(2);
+            $("rampError").textContent = (k * tau).toFixed(2);
         }
 
-        let time = [];
-        let output = [];
-        let input = [];
-
-
-        for (let i=0 ; i<= 200 ; i++){
-            let t = i * (30 / 200);
-            let y ; 
-            let x ; 
-            if (inputType === "step"){
-                x = 1;
-                // first order step response 
-                y= k* (1 - Math.exp(-t / tau));
-                
-            }else {
-                x = t ; 
-                //first order ramp response
-                y = k*( t - tau * (1 - Math.exp(-t / tau))); 
-            }
+        // 201 points from 0 to 30 seconds
+        const time = [];
+        const input = [];
+        const output = [];
+        for (let i = 0; i <= 200; i++) {
+            const t = i * (30 / 200);
             time.push(t);
-            input.push(x);
-            output.push(y);
+            input.push(inputType === "step" ? 1 : t);
+            output.push(calculateOutput(t, k, tau, inputType));
         }
-    
-        const inputTrace = {
-        x: time,
-        y: input,
-        mode: "lines",
-        name: "Input x(t)",
-        line: { color: "blue", dash: "dash" }
-        };
-    
-       const outputTrace = {
-        x: time,
-        y: output,
-        mode: "lines",
-        name: "Output y(t)",
-        line: { color: "red", width: 3 }
-        };
 
-        // Calculate the important step-response points
-        const yTau = k * (1 - Math.exp(-1));
-        const y3Tau = k * (1 - Math.exp(-3));
-        
-        // Markers for the step response
-        const markersTrace = {
-            x: [tau, 3 * tau],
-            y: [yTau, y3Tau],
-            mode: "markers+text",
-            name: "Response Markers",
-            marker: {
-                color: "green",
-                size: 12
-            },
-            text: ["63.2%", "95%"],
-            textposition: "top center"
-        };
-        const layout = {
+        const traces = [
+            { x: time, y: input, mode: "lines", name: "Input x(t)",
+              line: { color: "blue", dash: "dash" } },
+            { x: time, y: output, mode: "lines", name: "Output y(t)",
+              line: { color: "red", width: 3 } }
+        ];
+
+        // Step only: mark the 63.2% point (at τ) and the 95% point (at 3τ)
+        if (inputType === "step") {
+            traces.push({
+                x: [tau, 3 * tau],
+                y: [k * (1 - Math.exp(-1)), k * (1 - Math.exp(-3))],
+                mode: "markers+text",
+                name: "Response Markers",
+                marker: { color: "green", size: 12 },
+                text: ["63.2%", "95%"],
+                textposition: "top center"
+            });
+        }
+
+        Plotly.react("responseGraph", traces, {
             title: "First-Order System Response",
             xaxis: { title: "Time (seconds)" },
             yaxis: { title: "Amplitude" },
             legend: { orientation: "h" },
             margin: { t: 60, b: 60 }
-        };
+        }, { responsive: true });
 
-        const traces = [inputTrace, outputTrace];
-        
-        if (inputType === "step") {
-            traces.push(markersTrace);
-        }
-        
-        Plotly.react(
-            "responseGraph",
-            traces,
-            layout,
-            { responsive: true }
-        );
-
-        // update the logarithmic error plot
         updateErrorGraph(time, tau, inputType);
-                
     }
 
-    
-    // Logarithmic error-fraction plot
-
+    // ===== 4. Logarithmic error-fraction graph (step input only) =====
     function updateErrorGraph(time, tau, inputType) {
-
-        const errorCard =
-            document.getElementById("errorCard");
+        const errorCard = $("errorCard");
 
         if (inputType !== "step") {
-
             errorCard.style.display = "none";
             return;
-
         }
-
         errorCard.style.display = "block";
 
+        // Error fraction E(t) = e^(-t/τ). The slope of ln(E) is -1/τ.
+        const errorFraction = time.map(t => Math.exp(-t / tau));
+        $("errorSlope").textContent = (-1 / tau).toFixed(3);
 
-        // Calculate normalized error fraction
-        const errorFraction = time.map(
-            t => Math.exp(-t / tau)
-        );
-
-
-        // Calculate the natural-log slope
-        const slope = -1 / tau;
-
-        document.getElementById("errorSlope").textContent =
-            slope.toFixed(3);
-
-
-        const errorTrace = {
-
-            x: time,
-            y: errorFraction,
-
-            mode: "lines",
-            name: "Normalized Error Fraction",
-
-            line: {
-                color: "purple",
-                width: 3
-            }
-
-        };
-
-
-        const errorLayout = {
-
+        Plotly.react("errorGraph", [{
+            x: time, y: errorFraction,
+            mode: "lines", name: "Normalized Error Fraction",
+            line: { color: "purple", width: 3 }
+        }], {
             title: "Normalized Error Fraction vs Time",
-
-            xaxis: {
-                title: "Time (seconds)"
-            },
-
-            yaxis: {
-                title: "Error Fraction (log scale)",
-                type: "log"
-            },
-
-            margin: {
-                l: 80,
-                r: 30,
-                t: 60,
-                b: 70
-            }
-
-        };
-
-
-        Plotly.react(
-            "errorGraph",
-            [errorTrace],
-            errorLayout,
-            { responsive: true }
-        );
-
+            xaxis: { title: "Time (seconds)" },
+            yaxis: { title: "Error Fraction (log scale)", type: "log" },
+            margin: { l: 80, r: 30, t: 60, b: 70 }
+        }, { responsive: true });
     }
 
-
-    // Shared Model Formula
-
-    function calculateOutput(t, k, tau, inputType) {
-
-        if (inputType === "step") {
-            return k * (1 - Math.exp(-t / tau));
-        }
-
-        return k * (
-            t - tau * (1 - Math.exp(-t / tau))
-        );
-    }
-
-
-    // Input Validation
+    // ===== 5. Read and check the current settings =====
+    // Returns { k, tau, inputType }, or { error: "message" } if something is wrong
     function getCurrentParameters() {
-
         const k = Number(gainSlider.value);
         const tau = Number(tauSlider.value);
         const inputType = inputSelector.value;
 
-
-        if ( !Number.isFinite(k) ||k < 0.5 || k > 5) {
-            return {
-                error: "Gain K must be between 0.5 and 5."
-            };
+        if (!Number.isFinite(k) || k < 0.5 || k > 5) {
+            return { error: "Gain K must be between 0.5 and 5." };
         }
-        
-        if (  !Number.isFinite(tau) ||tau < 0.1 || tau > 10 ) {
-          return {
-                error:
-                    "Time constant τ must be between 0.1 and 10 seconds."
-            };
+        if (!Number.isFinite(tau) || tau < 0.1 || tau > 10) {
+            return { error: "Time constant τ must be between 0.1 and 10 seconds." };
         }
-
-
-        if ( inputType !== "step" && inputType !== "ramp" ) {
-
-            return {
-                error:
-                    "Please select Step Input or Ramp Input."
-            };
+        if (inputType !== "step" && inputType !== "ramp") {
+            return { error: "Please select Step Input or Ramp Input." };
         }
-
-
-        return {
-            k,
-            tau,
-            inputType
-        };
-
+        return { k, tau, inputType };
     }
 
+    // ===== 6. Predict, then check =====
+    $("checkPrediction").addEventListener("click", () => {
+        const feedback = $("predictionFeedback");
+        const params = getCurrentParameters();
 
-    //  predict, then check
+        if (params.error) {
+            showMessage(feedback, params.error, "error-message");
+            return;
+        }
 
-    document.getElementById("checkPrediction")
-        .addEventListener("click", function () {
+        const timeField = $("predictionTime");
+        const guessField = $("predictedOutput");
+        const t = Number(timeField.value);
+        const guess = Number(guessField.value);
 
-            const feedback =
-                document.getElementById("predictionFeedback");
+        // Time must be a number between 0 and 30
+        if (timeField.value.trim() === "" || !Number.isFinite(t) || t < 0 || t > 30) {
+            showMessage(feedback, "Enter a valid time between 0 and 30 seconds.", "error-message");
+            return;
+        }
+        // The prediction must be a number
+        if (guessField.value.trim() === "" || !Number.isFinite(guess)) {
+            showMessage(feedback, "Enter a finite numeric prediction before checking.", "error-message");
+            return;
+        }
 
-            feedback.hidden = false;
+        // Compare the prediction with the model
+        const actual = calculateOutput(t, params.k, params.tau, params.inputType);
+        const difference = Math.abs(guess - actual);
+        const tolerance = Math.max(0.05, Math.abs(actual) * 0.05);    // 5%, at least 0.05
+        const close = difference <= tolerance;
 
+        showMessage(feedback,
+            (close ? "Good prediction! " : "Try adjusting your prediction. ") +
+            "Model output at t = " + t.toFixed(2) + " s: " + actual.toFixed(4) +
+            " | Your prediction: " + guess.toFixed(4) +
+            " | Absolute difference: " + difference.toFixed(4) +
+            " | Within tolerance: " + (close ? "Yes" : "No"),
+            close ? "success-message" : "");
+    });
 
-            const params = getCurrentParameters();
+    // ===== 7. Validation checks =====
+    $("runValidation").addEventListener("click", () => {
+        const feedback = $("validationFeedback");
+        const params = getCurrentParameters();
 
-            if (params.error) {
+        if (params.error) {
+            showMessage(feedback, params.error, "error-message");
+            return;
+        }
 
-                feedback.textContent = params.error;
-                feedback.className =
-                    "feedback error-message";
+        const { k, tau, inputType } = params;
+        const output = t => calculateOutput(t, k, tau, inputType);
 
-                return;
+        // true if a and b are equal (within a tiny tolerance)
+        const near = (a, b, tolerance = 1e-8) => Math.abs(a - b) <= tolerance;
 
-            }
+        // Each check: [name, true/false]
+        const checks = [
+            ["Valid K and τ ranges", true],
+            ["Zero initial output y(0) = 0", near(output(0), 0)]
+        ];
 
-
-            const timeField =
-                document.getElementById("predictionTime");
-
-            const guessField =
-                document.getElementById("predictedOutput");
-
-
-            const t = Number(timeField.value);
-            const guess = Number(guessField.value);
-
-
-            // Validate time
-            if (
-                timeField.value.trim() === "" ||
-                !Number.isFinite(t) ||
-                t < 0 ||
-                t > 30
-            ) {
-
-                feedback.textContent =
-                    "Enter a valid time between 0 and 30 seconds.";
-
-                feedback.className =
-                    "feedback error-message";
-
-                return;
-
-            }
-
-
-            // Validate prediction
-            if (
-                guessField.value.trim() === "" ||
-                !Number.isFinite(guess)
-            ) {
-
-                feedback.textContent =
-                    "Enter a finite numeric prediction before checking.";
-
-                feedback.className =
-                    "feedback error-message";
-
-                return;
-
-            }
-
-
-            // Calculate actual model output
-            const actual = calculateOutput(
-                t,
-                params.k,
-                params.tau,
-                params.inputType
+        if (inputType === "step") {
+            checks.push(
+                ["At τ, output is 63.2% of K",  near(output(tau) / k, 1 - Math.exp(-1))],
+                ["At 3τ, output is 95.0% of K", near(output(3 * tau) / k, 1 - Math.exp(-3))],
+                ["Step output stays between 0 and K",
+                    [0, tau, 3 * tau, 30].every(t => output(t) >= -1e-8 && output(t) <= k + 1e-8)]
             );
-
-
-            // Calculate prediction error
-            const absoluteError = Math.abs(
-                guess - actual
+        } else {
+            checks.push(
+                ["Ramp output at t = τ matches its analytical formula",
+                    near(output(tau), k * tau * Math.exp(-1))],
+                ["Ramp steady-state tracking error tends to Kτ",
+                    near(k * 100 * tau - output(100 * tau), k * tau, 1e-6)],
+                ["Ramp output is nonnegative for t ≥ 0",
+                    [0, tau, 3 * tau, 30].every(t => output(t) >= -1e-8)]
             );
-
-
-            // Prediction tolerance
-            const tolerance = Math.max(
-                0.05,
-                Math.abs(actual) * 0.05
-            );
-
-
-            const close =
-                absoluteError <= tolerance;
-
-
-            feedback.className =
-                "feedback " +
-                (close ? "success-message" : "");
-
-
-            feedback.textContent =
-
-                (close
-                    ? "Good prediction! "
-                    : "Try adjusting your prediction. ") +
-
-                "Model output at t = " +
-                t.toFixed(2) +
-                " s: " +
-                actual.toFixed(4) +
-
-                " | Your prediction: " +
-                guess.toFixed(4) +
-
-                " | Absolute difference: " +
-                absoluteError.toFixed(4) +
-
-                " | Within tolerance: " +
-                (close ? "Yes" : "No");
-
-        });
-
-
-    // Mathematical validation cchecks
-
-    document.getElementById("runValidation")
-        .addEventListener("click", function () {
-
-            const feedback =
-                document.getElementById("validationFeedback");
-
-            feedback.hidden = false;
-
-
-            const params = getCurrentParameters();
-
-            if (params.error) {
-
-                feedback.className =
-                    "feedback error-message";
-
-                feedback.textContent = params.error;
-
-                return;
-
-            }
-
-
-            const { k, tau, inputType } = params;
-
-
-            const near = ( a,  b,  tolerance = 1e-8
-            ) => Math.abs(a - b) <= tolerance;
-
-
-            const checks = [
-
-                [  "Valid K and τ ranges", true ], [ "Zero initial output y(0) = 0",
-
-                    near(calculateOutput( 0, k,tau,  inputType  ),
-                        0
-                    )
-                ]
-
-            ];
-
-
-            if (inputType === "step") {
-
-                // Check 63.2% point
-                checks.push([
-
-                    "At τ, output is 63.2% of K",
-
-                    near(  calculateOutput(tau, k,tau,"step") / k,   1 - Math.exp(-1))
-
-                ]);
-
-
-                // Check 95% point
-                checks.push([
-                    "At 3τ, output is 95.0% of K",
-                    near(calculateOutput(3 * tau,k,tau,"step") / k,1 - Math.exp(-3)  )
-                ]);
-
-
-                // Check output range
-                checks.push([
-
-                    "Step output stays between 0 and K",
-
-                    [0, tau, 3 * tau, 30].every(t => {
-                        const y = calculateOutput(t,k,tau,"step");
-                        return (
-                            y >= -1e-8 &&
-                            y <= k + 1e-8
-                        );
-                    })
-                ]);
-
-            } else {
-
-                //  Check ramp response at tau
-                checks.push([
-
-                    "Ramp output at t = τ matches its analytical formula",
-
-                    near( calculateOutput(tau,k,tau,"ramp"),    k * tau * Math.exp(-1))
-
-                ]);
-
-
-                // C heck steady-state tracking error
-                checks.push([
-
-                    "Ramp steady-state tracking error tends to Kτ",
-
-                    near( k * 100 * tau -
-                        calculateOutput(100 * tau,k,tau,"ramp"), k * tau, 1e-6  )
-                ]);
-
-
-                // Check nonnegative ramp output
-                checks.push([
-
-                    "Ramp output is nonnegative for t ≥ 0",
-                    [0, tau, 3 * tau, 30].every(t => {
-                        return calculateOutput(t,k, tau, "ramp") >= -1e-8;
-
-                    })
-
-                ]);
-
-            }
-
-
-            // Count passed checks
-            const passed = checks.filter(
-                ([, ok]) => ok
-            ).length;
-
-
-            feedback.className =
-                "feedback " +
-                (
-                    passed === checks.length
-                        ? "success-message"
-                        : "error-message"
-                );
-
-
-            feedback.replaceChildren();
-
-
-            const heading =
-                document.createElement("strong");
-
-            heading.textContent =
-                passed +
-                " / " +
-                checks.length +
-                " checks passed";
-
-            feedback.appendChild(heading);
-
-
-            const list =
-                document.createElement("ul");
-
-
-            checks.forEach(([label, ok]) => {
-
-                const item =
-                    document.createElement("li");
-
-                item.textContent =
-                    (ok ? "PASS: " : "FAIL: ") +
-                    label;
-
-                list.appendChild(item);
-
-            });
-
-
-            feedback.appendChild(list);
-
-        });
-
-
-    //Reset feedback when controls change
-
-    function resetExtraFeedback() {
-
-        document.getElementById(
-            "predictionFeedback"
-        ).hidden = true;
-
-        document.getElementById(
-            "validationFeedback"
-        ).hidden = true;
-
+        }
+
+        // Count passed checks and show the list
+        const passed = checks.filter(([, ok]) => ok).length;
+        const allPassed = passed === checks.length;
+        const items = checks
+            .map(([label, ok]) => "<li>" + (ok ? "PASS: " : "FAIL: ") + label + "</li>")
+            .join("");
+
+        feedback.hidden = false;
+        feedback.className = "feedback " + (allPassed ? "success-message" : "error-message");
+        feedback.innerHTML =
+            "<strong>" + passed + " / " + checks.length + " checks passed</strong><ul>" + items + "</ul>";
+    });
+
+    // ===== 8. When a control changes =====
+    
+    function onControlChange() {
+        $("predictionFeedback").hidden = true;
+        $("validationFeedback").hidden = true;// Hide old messages, then redraw the graphs
+        updateGraph();
     }
 
+    gainSlider.addEventListener("input", onControlChange);
+    tauSlider.addEventListener("input", onControlChange);
+    inputSelector.addEventListener("change", onControlChange);
 
-    gainSlider.addEventListener(
-        "input",
-        resetExtraFeedback
-    );
-
-    tauSlider.addEventListener(
-        "input",
-        resetExtraFeedback
-    );
-
-    inputSelector.addEventListener(
-        "change",
-        resetExtraFeedback
-    );
-
-
-    //update graph whenever a slider changes
-    gainSlider.addEventListener("input", updateGraph);
-    tauSlider.addEventListener("input", updateGraph);
-    inputSelector.addEventListener("change" , updateGraph);
-
-    // draw the first graph when the page loads
-    updateGraph();
-
+    updateGraph();  
 </script>
 </body>
 </html>
-    
