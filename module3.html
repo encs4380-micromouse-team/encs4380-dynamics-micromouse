@@ -421,8 +421,9 @@
         }
 
         const hoverText = "Position: %{x:.3f} m<br>Velocity: %{y:.3f} m/s<extra></extra>";
+        // The path of the motion
         const plot = [
-            // The path of the motion
+            
             { x: px, y: py, mode: "lines", name: "Trajectory", hovertemplate: hoverText,
               line: { color: "#3478c0", width: 3 } },
             // Start point (orange) and final point (green)
@@ -439,8 +440,7 @@
     }
 
     // ===== 7. Eigenvalues and S-plane =====
-    // Eigenvalues of A (the same as the poles).
-    // Each pole is { re: real part, im: imaginary part }.
+    
     function eigenvalues(m, b, k) {
         const re = -b / (2 * m);
         const discriminant = b * b - 4 * m * k;
@@ -523,14 +523,14 @@
         const F = sliderValue("F");
         const result = metrics(simulate(m, b, k, F), m, b, k, F);
 
-        // The response oscillates only when ζ < 1
+        // The response oscillates only when < 1
         const oscillates = result.zeta < 1;
         const saidYes = choice.value === "yes";
         $("predictionResult").textContent = feedbackLine(saidYes === oscillates, result);
     }
 
     // ===== 9. Update the whole page =====
-    // Runs on page load and every time a slider moves
+
     function updateAll() {
         const m = sliderValue("m");
         const b = sliderValue("b");
