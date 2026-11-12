@@ -420,9 +420,8 @@
         const b = Number(el("guess2").value);    // second guess
         const isFirst = sensor.type === "first";
 
-        // Check the inputs: both must be filled and positive.
-        // For second order, ζ must also be below 1.
-        const isEmpty = el("guess1").value === "" || el("guess2").value === "";
+        
+        const isEmpty = el("guess1").value === "" || el("guess2").value === "";// For second order < 1.
         const isInvalid = !isPositive(a) || !isPositive(b) || (!isFirst && a >= 1);
         if (isEmpty || isInvalid) {
             el("message").textContent = "Enter two positive numbers." +
@@ -453,8 +452,8 @@
         el("guess2").disabled = true;
         el("check").disabled = true;
 
-        // Show the true curve and the guess, then the worked solution
-        drawGraph(isFirst ? { K: a, tau: b } : { zeta: a, wn: b });
+        
+        drawGraph(isFirst ? { K: a, tau: b } : { zeta: a, wn: b }); // Show the true curve and the guess, then the worked solution
         showSolution(a, b);
     }
 
@@ -488,7 +487,6 @@
             <div class='mathline'>K = ${fmt(amplitude)} × √(1 + (${fmt(w)} × ${fmt(s.tau)})²) = ${fmt(s.K)}</div>
             <p class='note'>Amplitude and phase are measured after the initial transient fades.</p>`;
     }
-
     // Second order, step input
     function solutionSecond(s) {
         const z = s.zeta;
@@ -517,7 +515,6 @@
         } else {
             html += solutionSecond(sensor);
         }
-
         html += "<p class='note'>These worked values come from the clean model. The noisy graph may give slightly different readings.</p>";
         el("solution").innerHTML = html;
         el("solutionCard").hidden = false;
