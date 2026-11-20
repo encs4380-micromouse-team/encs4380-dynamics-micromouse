@@ -1,20 +1,15 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>P2 - A Slow Sensor in the Loop</title>
-
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
     <style>
-
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -25,7 +20,7 @@
 
         .container {
             max-width: 1250px;
-            margin: 0 auto;
+            margin: auto;
             padding: 35px 25px;
         }
 
@@ -34,23 +29,9 @@
             margin-bottom: 30px;
         }
 
-        .header h1 {
-            color: #17365d;
-            font-size: 35px;
-        }
-
-        h2 {
-            color: #3478c0;
-            font-size: 21px;
-            margin-top: 0;
-        }
-
-        p {
-            color: #64748b;
-            line-height: 1.6;
-        }
-
-        /* Cards */
+        h1 { color: #17365d; font-size: 35px; }
+        h2 { color: #3478c0; font-size: 21px; margin-top: 0; }
+        p { color: #64748b; line-height: 1.6; }
 
         .grid {
             display: grid;
@@ -63,11 +44,9 @@
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 5px 20px rgba(0,0,0,.06);
             min-width: 0;
         }
-
-        /* Controls */
 
         label {
             display: block;
@@ -86,9 +65,7 @@
             accent-color: #3478c0;
         }
 
-        input:disabled {
-            opacity: 0.4;
-        }
+        input:disabled { opacity: .4; }
 
         select {
             width: 100%;
@@ -103,7 +80,7 @@
             display: inline-block;
             background: #3478c0;
             color: white;
-            border: none;
+            border: 0;
             text-decoration: none;
             padding: 11px 18px;
             border-radius: 8px;
@@ -124,15 +101,8 @@
             margin-top: 15px;
         }
 
-        .note {
-            font-size: 13px;
-        }
-
-        /* Graph and Metrics */
-
-        .graph {
-            height: 380px;
-        }
+        .note { font-size: 13px; }
+        .graph { height: 350px; }
 
         .metrics {
             display: grid;
@@ -159,96 +129,59 @@
         }
 
         @media (max-width: 850px) {
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .metrics {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .container {
-                padding: 20px 12px;
-            }
-
-            .header h1 {
-                font-size: 27px;
-            }
-
-            .card {
-                padding: 18px;
-            }
+            .grid { grid-template-columns: 1fr; }
+            .metrics { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 20px 12px; }
+            h1 { font-size: 27px; }
+            .card { padding: 18px; }
         }
-
     </style>
-
 </head>
 
 <body>
-
 <div class="container">
 
-    <a href="index.html" class="module-button">
-        Back to Modules
-    </a>
+    <a href="index.html" class="module-button">Back to Modules</a>
 
     <div class="header">
-
         <h1>P2 - A Slow Sensor in the Loop</h1>
-
-        <p>
-            Explore how sensor dynamics affect closed-loop
-            performance, overshoot, and oscillations.
-        </p>
-
+        <p>Explore the effect of sensor lag on closed-loop control.</p>
     </div>
-
 
     <div class="grid">
 
         <!-- Plant Parameters -->
 
         <div class="card">
-
             <h2>Plant Parameters</h2>
 
-            <div class="equation">
-                G(s) = K / (τs + 1)
-            </div>
+            <div class="equation">G(s) = K / (τs + 1)</div>
 
-            <label>System Gain (K)
+            <label for="K">System Gain (K)
                 <span class="value" id="KValue"></span>
             </label>
-
             <input type="range" id="K"
-                min="0.5" max="5" step="0.1" value="1">
+                   min="0.5" max="5" step="0.1" value="1">
 
-            <label>Time Constant (τ)
+            <label for="tau">Time Constant (τ)
                 <span class="value" id="tauValue"></span>
             </label>
-
             <input type="range" id="tau"
-                min="0.1" max="5" step="0.1" value="1">
+                   min="0.1" max="5" step="0.1" value="1">
 
-            <label>Setpoint (r)
+            <label for="r">Setpoint (r)
                 <span class="value" id="rValue"></span>
             </label>
-
             <input type="range" id="r"
-                min="0.5" max="5" step="0.1" value="1">
-
+                   min="0.5" max="5" step="0.1" value="1">
         </div>
-
 
         <!-- Controller Parameters -->
 
         <div class="card">
-
             <h2>Controller Parameters</h2>
 
-            <label>Controller Type</label>
-
+            <label for="controller">Controller Type</label>
             <select id="controller">
                 <option value="P">P Controller</option>
                 <option value="PI" selected>PI Controller</option>
@@ -258,77 +191,59 @@
 
             <div class="equation" id="controllerEquation"></div>
 
-            <label>Proportional Gain (Kp)
+            <label for="kp">Proportional Gain (Kp)
                 <span class="value" id="kpValue"></span>
             </label>
-
             <input type="range" id="kp"
-                min="0" max="20" step="0.1" value="5">
+                   min="0" max="20" step="0.1" value="5">
 
-            <label>Integral Gain (Ki)
+            <label for="ki">Integral Gain (Ki)
                 <span class="value" id="kiValue"></span>
             </label>
-
             <input type="range" id="ki"
-                min="0" max="10" step="0.1" value="3">
+                   min="0" max="10" step="0.1" value="3">
 
-            <label>Derivative Gain (Kd)
+            <label for="kd">Derivative Gain (Kd)
                 <span class="value" id="kdValue"></span>
             </label>
-
             <input type="range" id="kd"
-                min="0" max="2" step="0.05" value="0">
-
+                   min="0" max="2" step="0.05" value="0">
         </div>
-
 
         <!-- Sensor Parameters -->
 
         <div class="card">
-
             <h2>Sensor Parameters</h2>
 
-            <div class="equation">
-                H(s) = 1 / (τₛs + 1)
-            </div>
-
-            <label>Sensor Time Constant (τₛ)
+            <label for="ts">Sensor Time Constant (τs)
                 <span class="value" id="tsValue"></span>
             </label>
-
             <input type="range" id="ts"
-                min="0.05" max="5" step="0.05" value="0.1">
+                   min="0.05" max="5" step="0.05" value="0.1">
 
-            <p>
-                A larger sensor time constant means
-                a slower sensor response.
-            </p>
-
-            <div class="equation">
-                e(t) = r(t) − yₘ(t)
-            </div>
+            <div class="equation">H(s) = 1 / (τₛs + 1)</div>
 
             <p class="note">
-                The controller uses the measured output,
-                not the true output.
+                A larger time constant makes the sensor slower.
             </p>
 
-        </div>
+            <div class="equation">e(t) = r(t) − yₘ(t)</div>
 
+            <p class="note">
+                The controller only controls what the sensor reports.
+            </p>
+        </div>
 
         <!-- Predict, Then Check -->
 
         <div class="card">
-
             <h2>Predict, Then Check</h2>
 
             <p class="note">
-                Predict what happens when the sensor
-                time constant increases.
+                Predict the effect of increasing the sensor time constant.
             </p>
 
-            <label>Overshoot</label>
-
+            <label for="predictOS">Overshoot</label>
             <select id="predictOS">
                 <option value="">Select Prediction</option>
                 <option value="increase">Increase</option>
@@ -336,8 +251,7 @@
                 <option value="same">No Change</option>
             </select>
 
-            <label>Settling Time</label>
-
+            <label for="predictST">Settling Time</label>
             <select id="predictST">
                 <option value="">Select Prediction</option>
                 <option value="increase">Increase</option>
@@ -347,99 +261,76 @@
 
             <p id="referenceInfo" class="note"></p>
 
-            <button onclick="checkPrediction()">
-                Check Prediction
-            </button>
+            <button onclick="checkPrediction()">Check Prediction</button>
 
             <p id="feedback" class="note"></p>
-
         </div>
-
     </div>
-
 
     <!-- Output Graph -->
 
-    <div class="card" style="margin-bottom: 20px;">
-
-        <h2>True Output vs. Measured Output</h2>
-
+    <div class="card">
+        <h2>True Output vs. Sensor Output</h2>
         <div class="graph" id="outputGraph"></div>
-
-        <p class="note">
-            The measured output lags behind the true output.
-            Increasing sensor lag can cause overshoot
-            and oscillations.
-        </p>
-
-        <p class="note">
-            Control signal limits: −10 to +10.
-        </p>
-
     </div>
-
 
     <!-- Response Characteristics -->
 
-    <div class="card">
-
+    <div class="card" style="margin-top: 20px;">
         <h2>Response Characteristics</h2>
 
-        <div class="metrics">
-
-            <div class="metric">
-                <p>Rise Time</p>
-                <strong id="rise">--</strong>
-            </div>
-
-            <div class="metric">
-                <p>Overshoot</p>
-                <strong id="overshoot">--</strong>
-            </div>
-
-            <div class="metric">
-                <p>Settling Time</p>
-                <strong id="settling">--</strong>
-            </div>
-
-            <div class="metric">
-                <p>Steady-State Error</p>
-                <strong id="error">--</strong>
-            </div>
-
-        </div>
+        <div class="metrics" id="metrics"></div>
 
         <p class="note">
-            Metrics are calculated using the true output.
-            Rise and settling times are relative to the
-            steady-state output. Overshoot and SSE are
-            relative to the setpoint.
+            Rise and settling times are relative to the estimated steady-state output.
+            Overshoot and SSE are relative to the setpoint.
             N/A indicates an unsettled or undefined response.
         </p>
-
     </div>
 
+    <!-- Validation Checks -->
+
+    <div class="card" style="margin-top: 20px;">
+        <h2>Validation Checks</h2>
+
+        <p class="note">
+            Run fixed numerical tests independently of the current sliders.
+        </p>
+
+        <button onclick="runValidation()">Run Validation Checks</button>
+
+        <div id="validationResults" style="margin-top: 15px;"></div>
+    </div>
 
     <div class="footer">
-
         <p>ENCS4380 - Interfacing Techniques</p>
         <p>PID Control Toolkit | Micromouse Project</p>
-
     </div>
 
 </div>
 
-
 <script>
-
-    const dt = 0.001;
-    const duration = 30;
-    const limit = 10;
+    const dt = 0.001, duration = 30, limit = 10;
 
     const get = id => document.getElementById(id);
     const num = id => Number(get(id).value);
+    const clamp = u => Math.max(-limit, Math.min(limit, u));
 
-    let reference, current;
+    let current, reference;
+
+    const names = [
+        "Rise Time", "Overshoot",
+        "Settling Time", "Steady-State Error"
+    ];
+
+    const units = [" s", "%", " s", "%"];
+
+    get("metrics").innerHTML = names.map((name, i) => `
+        <div class="metric">
+            <p>${name}</p>
+            <strong id="metric${i}">--</strong>
+        </div>
+    `).join("");
 
 
     // Euler Simulation
@@ -447,32 +338,21 @@
     function simulate(K, tau, ts, kp, ki, kd, r) {
 
         let t = [], y = [], ym = [];
-
-        let output = 0;
-        let measured = 0;
-        let integral = 0;
+        let output = 0, measured = 0, integral = 0;
 
         for (let i = 0; i <= duration / dt; i++) {
 
-            // Sensor equation
             let dm = (output - measured) / ts;
-
-            // Controller uses measured output
             let error = r - measured;
 
-            let u = kp * error + ki * integral - kd * dm;
+            let u = clamp(kp * error + ki * integral - kd * dm);
 
-            // Actuator saturation
-            u = Math.max(-limit, Math.min(limit, u));
-
-            // Plant equation
             let dy = (K * u - output) / tau;
 
             t.push(i * dt);
             y.push(output);
             ym.push(measured);
 
-            // Euler integration
             output += dy * dt;
             measured += dm * dt;
             integral += error * dt;
@@ -488,55 +368,45 @@
 
         let { t, y, ym } = data;
 
-        let peak = Math.max(...y);
-        let overshoot = Math.max(0, (peak - r) / r * 100);
+        let os = Math.max(0, (Math.max(...y) - r) / r * 100);
 
         let tail = y.slice(-2000);
         let sensorTail = ym.slice(-2000);
 
-        let final = tail.reduce((a, b) => a + b, 0)
-                    / tail.length;
+        let final = tail.reduce((a, b) => a + b, 0) / tail.length;
 
         let stable =
-            Math.max(...tail) - Math.min(...tail) < 0.001 * r
-            && Math.max(...sensorTail) - Math.min(...sensorTail)
-               < 0.001 * r
-            && Math.abs(y[y.length - 1] - ym[ym.length - 1])
-               < 0.001 * r;
+            Math.max(...tail) - Math.min(...tail) < 0.001 * r &&
+            Math.max(...sensorTail) - Math.min(...sensorTail) < 0.001 * r &&
+            Math.abs(y.at(-1) - ym.at(-1)) < 0.001 * r;
 
         if (!stable)
-            return { rise: null, overshoot,
-                     settling: null, error: null };
+            return [null, os, null, null];
 
-        let error = Math.abs(r - final) / r * 100;
+        let sse = Math.abs(r - final) / r * 100;
 
         if (final <= 0.000001)
-            return { rise: null, overshoot,
-                     settling: null, error };
+            return [null, os, null, sse];
 
-        let i10 = y.findIndex(v => v >= 0.1 * final);
-        let i90 = y.findIndex(v => v >= 0.9 * final);
+        let a = y.findIndex(v => v >= 0.1 * final);
+        let b = y.findIndex(v => v >= 0.9 * final);
 
-        let rise = i10 >= 0 && i90 >= 0
-            ? t[i90] - t[i10] : null;
+        let rise = a >= 0 && b >= 0 ? t[b] - t[a] : null;
 
         let i = y.length - 1;
 
         while (i >= 0 && Math.abs(y[i] - final) <= 0.02 * final)
             i--;
 
-        let settling = t[i + 1] ?? null;
-
-        return { rise, overshoot, settling, error };
+        return [rise, os, t[i + 1] ?? null, sse];
     }
 
 
-    // Plot True and Measured Output
+    // Draw Graph
 
     function drawGraph(data, r) {
 
         Plotly.react("outputGraph", [
-
             {
                 x: data.t,
                 y: data.y,
@@ -544,15 +414,13 @@
                 mode: "lines",
                 line: { color: "#3478c0", width: 2 }
             },
-
             {
                 x: data.t,
                 y: data.ym,
                 name: "Measured Output",
                 mode: "lines",
-                line: { color: "#e19536", width: 2 }
+                line: { color: "#e69536", width: 2 }
             },
-
             {
                 x: [0, duration],
                 y: [r, r],
@@ -560,29 +428,14 @@
                 mode: "lines",
                 line: { color: "#64748b", dash: "dash" }
             }
-
         ], {
-
-            margin: { l: 60, r: 25, t: 40, b: 50 },
-
-            xaxis: {
-                title: "Time (s)"
-            },
-
-            yaxis: {
-                title: "Output"
-            },
-
-            legend: {
-                orientation: "h",
-                y: 1.15
-            }
-
+            margin: { l: 55, r: 20, t: 35, b: 50 },
+            xaxis: { title: "Time (s)" },
+            yaxis: { title: "Output" },
+            legend: { orientation: "h", y: 1.15 }
         }, {
-
             responsive: true,
             displaylogo: false
-
         });
     }
 
@@ -595,46 +448,108 @@
         let st = get("predictST").value;
 
         if (!os || !st) {
-
-            get("feedback").textContent =
-                "Select both predictions first.";
-
+            get("feedback").textContent = "Select both predictions first.";
             return;
         }
 
         if (current.ts <= reference.ts) {
-
-            get("feedback").textContent =
-                "Increase the sensor time constant first.";
-
+            get("feedback").textContent = "Increase the sensor time constant first.";
             return;
         }
 
-        function compare(oldValue, newValue, prediction) {
+        function compare(a, b, prediction) {
 
-            if (oldValue === null || newValue === null)
-                return "N/A - response has not settled.";
+            if (a === null || b === null)
+                return "N/A - unsettled response.";
 
-            let diff = newValue - oldValue;
-
-            let actual = Math.abs(diff) <= 0.01
-                ? "same" : diff > 0 ? "increase" : "decrease";
+            let actual = Math.abs(b - a) <= 0.01
+                ? "same" : b > a ? "increase" : "decrease";
 
             return (prediction === actual ? "Correct" : "Incorrect")
-                   + " (" + actual + ")";
+                    + " (" + actual + ")";
         }
 
         get("feedback").innerHTML =
-
             "Overshoot: " +
-
-            compare(reference.metrics.overshoot,
-                    current.metrics.overshoot, os) +
-
+            compare(reference.metrics[1], current.metrics[1], os) +
             "<br>Settling Time: " +
+            compare(reference.metrics[2], current.metrics[2], st);
+    }
 
-            compare(reference.metrics.settling,
-                    current.metrics.settling, st);
+
+    // Validation Checks
+
+    function runValidation() {
+
+        let results = [];
+
+        function check(name, passed, details) {
+            results.push(`
+                <p>
+                    <strong style="color:${passed ? "green" : "red"}">
+                        ${passed ? "PASS" : "FAIL"}
+                    </strong>
+                    — ${name}: ${details}
+                </p>
+            `);
+        }
+
+        let fast = simulate(1, 1, 0.05, 5, 3, 0, 1);
+        let slow = simulate(1, 1, 1, 5, 3, 0, 1);
+
+        // Test 1: Sensor Tracking
+
+        function trackingError(data) {
+            return Math.max(
+                ...data.y.map((v, i) => Math.abs(v - data.ym[i]))
+            );
+        }
+
+        let a = trackingError(fast);
+        let b = trackingError(slow);
+
+        check(
+            "Fast Sensor Tracking",
+            a < b && a < 0.25,
+            `Maximum tracking error = ${a.toFixed(3)} vs ${b.toFixed(3)}`
+        );
+
+        // Test 2: Sensor Lag Effect
+
+        let f = calculateMetrics(fast, 1);
+        let s = calculateMetrics(slow, 1);
+
+        check(
+            "Sensor Lag Effect",
+            s[1] > f[1],
+            `${f[1].toFixed(2)}% → ${s[1].toFixed(2)}% overshoot`
+        );
+
+        // Test 3: Oscillations
+
+        let oscillating = simulate(1, 1, 3, 5, 10, 0, 1);
+        let tail = oscillating.y.slice(-10000);
+
+        let crossings = tail.filter((v, i) =>
+            i > 0 && (v - 1) * (tail[i - 1] - 1) < 0
+        ).length;
+
+        check(
+            "Oscillatory Response",
+            crossings >= 2 &&
+            Math.max(...tail) - Math.min(...tail) > 0.1,
+            `${crossings} setpoint crossings in final 10 s`
+        );
+
+        // Test 4: PI Steady-State Error
+
+        check(
+            "PI Steady-State Error",
+            f[3] !== null && f[3] < 0.1,
+            `SSE = ${f[3]?.toFixed(4) ?? "N/A"}%`
+        );
+
+        get("validationResults").innerHTML = results.join("");
     }
 
 
@@ -647,73 +562,48 @@
         get("ki").disabled = !type.includes("I");
         get("kd").disabled = !type.includes("D");
 
-        let K = num("K");
-        let tau = num("tau");
-        let ts = num("ts");
+        let K = num("K"), tau = num("tau"), ts = num("ts");
+        let kp = num("kp"), r = num("r");
 
-        let kp = num("kp");
         let ki = get("ki").disabled ? 0 : num("ki");
         let kd = get("kd").disabled ? 0 : num("kd");
 
-        let r = num("r");
-
-        get("controllerEquation").textContent =
-            "u(t) = Kp e(t)"
-            + (type.includes("I") ? " + Ki ∫e(t)dt" : "")
-            + (type.includes("D") ? " − Kd dyₘ/dt" : "");
-
-        ["K", "tau", "ts", "kp", "ki", "kd", "r"]
-            .forEach(id => {
-
-                let value = get(id).disabled ? 0 : num(id);
-
-                get(id + "Value").textContent =
-                    value.toFixed(2);
-            });
-
-        let data = simulate(K, tau, ts, kp, ki, kd, r);
-
-        let metrics = calculateMetrics(data, r);
-
-        function display(id, value, unit) {
-
-            get(id).textContent = value === null
-                ? "N/A" : value.toFixed(2) + unit;
+        for (let id of ["K", "tau", "ts", "kp", "ki", "kd", "r"]) {
+            get(id + "Value").textContent =
+                (get(id).disabled ? 0 : num(id)).toFixed(2);
         }
 
-        display("rise", metrics.rise, " s");
-        display("overshoot", metrics.overshoot, "%");
-        display("settling", metrics.settling, " s");
-        display("error", metrics.error, "%");
+        get("controllerEquation").textContent =
+            "u(t) = Kp e(t)" +
+            (type.includes("I") ? " + Ki ∫e(t)dt" : "") +
+            (type.includes("D") ? " − Kd dyₘ/dt" : "");
 
+        let data = simulate(K, tau, ts, kp, ki, kd, r);
+        let metrics = calculateMetrics(data, r);
 
-        // Automatically save reference when other settings change
+        metrics.forEach((v, i) => {
+            get("metric" + i).textContent =
+                v === null ? "N/A" : v.toFixed(2) + units[i];
+        });
 
         let key = [K, tau, kp, ki, kd, r].join(",");
 
-        if (!current || current.key !== key) {
-
+        if (!current || current.key !== key)
             reference = { ts, metrics };
-        }
 
         current = { ts, metrics, key };
 
         get("referenceInfo").textContent =
-            "Reference sensor time constant: "
-            + reference.ts.toFixed(2) + " s";
+            "Reference sensor time constant: " +
+            reference.ts.toFixed(2) + " s";
 
         get("feedback").textContent = "";
 
         drawGraph(data, r);
     }
 
-
-    document.querySelectorAll(
-        'input[type="range"], #controller'
-    ).forEach(element => {
-
-        element.addEventListener("input", update);
-    });
+    document.querySelectorAll('input[type="range"], #controller')
+        .forEach(el => el.addEventListener("input", update));
 
     update();
 
