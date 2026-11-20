@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P1 - PID Playground</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        /* ===== 1. Page basics ===== */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --blue-dark: #235d99;
+            --gray: #64748b;
+            --bg: #f4f7fb;
+            --text: #243047;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container { max-width: 1250px; margin: 0 auto; padding: 35px 25px; }
+
+        h2 { color: var(--blue); font-size: 21px; margin-top: 0; }
+        p  { color: var(--gray); line-height: 1.6; }
+        .note { font-size: 13px; }
+
+        /* ===== 2. Header and footer ===== */
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: var(--navy); font-size: 35px; }
+        .footer { text-align: center; margin-top: 35px; font-size: 14px; }
+
+        /* ===== 3. Cards ===== */
+        /* Two cards per row */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            min-width: 0;
+        }
+
+        /* ===== 4. Controls ===== */
+        label { display: block; margin: 15px 0 8px; font-size: 15px; }
+        .value { float: right; color: var(--blue); font-weight: bold; }
+
+        input[type="range"] { width: 100%; accent-color: var(--blue); }
+        input:disabled { opacity: 0.4; }
+
+        select {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #dbe2ea;
+            border-radius: 7px;
+            color: var(--text);
+            background: white;
+        }
+
+        button, .module-button {
+            display: inline-block;
+            background: var(--blue);
+            color: white;
+            border: none;
+            text-decoration: none;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button:hover, .module-button:hover { background: var(--blue-dark); }
+
+        .equation {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            color: var(--navy);
+            margin-top: 15px;
+        }
+
+        /* ===== 5. Graphs and results ===== */
+        .graph { height: 330px; }
+
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .metric {
+            background: var(--bg);
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .metric strong { color: var(--navy); font-size: 22px; }
+
+        /* ===== 6. Small screens ===== */
+        @media (max-width: 850px) {
+            .grid { grid-template-columns: 1fr; }
+            .metrics { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 27px; }
+            .card { padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <a href="index.html" class="module-button">Back to Modules</a>
+
+    <div class="header">
+        <h1>P1 - PID Playground</h1>
+        <p>Explore the effects of PID controllers on first-order and second-order systems.</p>
+    </div>
+
+    <!-- Settings: plant, controller, reference, prediction -->
+    <div class="grid">
+
+        <!-- Plant parameters -->
+        <div class="card">
+            <h2>Plant Parameters</h2>
+
+            <label>Plant Type</label>
+            <select id="plant">
+                <option value="first">First-Order System</option>
+                <option value="second">Second-Order System</option>
+            </select>
+
+            <div class="equation" id="plantEquation"></div>
+
+            <label>System Gain (K) <span class="value" id="KValue"></span></label>
+            <input type="range" id="K" min="0.5" max="5" step="0.1" value="1">
+
+            <!-- Only for the first-order plant -->
+            <div id="firstParameters">
+                <label>Time Constant (τ) <span class="value" id="tauValue"></span></label>
+                <input type="range" id="tau" min="0.1" max="5" step="0.1" value="1">
+            </div>
+
+            <!-- Only for the second-order plant -->
+            <div id="secondParameters" hidden>
+                <label>Damping Ratio (ζ) <span class="value" id="zetaValue"></span></label>
+                <input type="range" id="zeta" min="0" max="2" step="0.05" value="0.5">
+
+                <label>Natural Frequency (ωn) <span class="value" id="wnValue"></span></label>
+                <input type="range" id="wn" min="0.5" max="10" step="0.5" value="2">
+            </div>
+        </div>
+
+        <!-- Controller parameters -->
+        <div class="card">
+            <h2>Controller Parameters</h2>
+
+            <label>Controller Type</label>
+            <select id="controller">
+                <option value="P">P Controller</option>
+                <option value="PI">PI Controller</option>
+                <option value="PD">PD Controller</option>
+                <option value="PID">PID Controller</option>
+            </select>
+
+            <div class="equation" id="controllerEquation"></div>
+
+            <label>Proportional Gain (Kp) <span class="value" id="kpValue"></span></label>
+            <input type="range" id="kp" min="0" max="20" step="0.1" value="1">
+
+            <label>Integral Gain (Ki) <span class="value" id="kiValue"></span></label>
+            <input type="range" id="ki" min="0" max="10" step="0.1" value="0">
+
+            <label>Derivative Gain (Kd) <span class="value" id="kdValue"></span></label>
+            <input type="range" id="kd" min="0" max="2" step="0.05" value="0">
+        </div>
+
+        <!-- Reference input -->
+        <div class="card">
+            <h2>Reference Input</h2>
+
+            <label>Setpoint (r) <span class="value" id="rValue"></span></label>
+            <input type="range" id="r" min="0.5" max="5" step="0.1" value="1">
+            <p class="note">The setpoint represents the desired system output.</p>
+
+            <h2 style="margin-top: 25px;">Closed-Loop System</h2>
+            <img src="ClosedLoopDiagram.png" alt="Closed-Loop System" style="width: 100%;">
+        </div>
+
+        <!-- Predict, then check -->
+        <div class="card">
+            <h2>Predict, Then Check</h2>
+            <p class="note">Select your predictions, change the controller gains, then check your answers.</p>
+
+            <div id="predictions"></div>
+            <p id="referenceInfo" class="note"></p>
+
+            <button onclick="checkPrediction()">Check Prediction</button>
+            <p id="feedback" class="note"></p>
+        </div>
+
+    </div>
+
+    <!-- Graphs -->
+    <div class="grid">
+        <div class="card">
+            <h2>Output vs. Setpoint</h2>
+            <div class="graph" id="outputGraph"></div>
+        </div>
+
+        <div class="card">
+            <h2>Control Signal</h2>
+            <div class="graph" id="controlGraph"></div>
+            <p class="note">Note: The control signal is limited to −10 and +10 to represent actuator saturation.</p>
+        </div>
+    </div>
+
+    <!-- Response characteristics -->
+    <div class="card" style="margin-bottom: 20px;">
+        <h2>Response Characteristics</h2>
+        <div class="metrics" id="metrics"></div>
+        <p class="note">
+            Rise time: 10% to 90% of the steady-state output.
+            Settling time: within ±2% of the steady-state output.
+            Overshoot and SSE are relative to the setpoint.
+            N/A indicates an unsettled or undefined response.
+        </p>
+    </div>
+
+    <!-- Validation checks -->
+    <div class="card">
+        <h2>Validation Checks</h2>
+        <p class="note">First-order plant: K = 1, τ = 1 s.</p>
+        <button onclick="runValidation()">Run Validation Checks</button>
+        <p id="validationResults"></p>
+    </div>
+
+    <div class="footer">
+        <p>ENCS4380 - Interfacing Techniques</p>
+        <p>PID Control Toolkit | Micromouse Project</p>
+    </div>
+
+</div>
+
+<script>
+    // ===== 1. Settings and helpers =====
+    const dt = 0.001;         // simulation time step (s)
+    const duration = 30;      // simulation length (s)
+    const limit = 10;         // control signal limit (actuator saturation)
+
+    // The 4 response characteristics, and the unit shown after each one
+    const names = ["Rise Time", "Overshoot", "Settling Time", "Steady-State Error"];
+    const units = [" s", "%", " s", "%"];
+
+    // Short names: get("kp") = the element, num("kp") = its value as a number
+    const get = id => document.getElementById(id);
+    const num = id => Number(get(id).value);
+
+    // Number with unit, or "N/A" when there is no value
+    const format = (value, unit) => value === null ? "N/A" : value.toFixed(2) + unit;
+
+    // Reference values for the "Predict, Then Check" part
+    let current;          // latest metrics, with the gains key and plant key
+    let reference;        // metrics to compare against
+    let referenceKey;     // gains used for the reference, e.g. "Kp=1, Ki=0, Kd=0"
+
+    // ===== 2. Build the metric boxes and prediction dropdowns =====
+    get("metrics").innerHTML = names.map((name, i) => `
+        <div class="metric">
+            <p>${name}</p>
+            <strong id="metric${i}">--</strong>
+        </div>`).join("");
+
+    get("predictions").innerHTML = names.map((name, i) => `
+        <label>${name}</label>
+        <select id="prediction${i}">
+            <option value="">Select Prediction</option>
+            <option value="increase">Increase</option>
+            <option value="decrease">Decrease</option>
+            <option value="same">No Change</option>
+        </select>`).join("");
+
+    // ===== 3. Simulation (Euler method) =====
+    // Simulates the closed loop for 30 s.
+    // Returns the time t, the output y, and the control signal u.
+    function simulate(plant, K, tau, zeta, wn, kp, ki, kd, r) {
+        const t = [];
+        const y = [];
+        const u = [];
+
+        let output = 0;
+        let velocity = 0;       // only used by the second-order plant
+        let integral = 0;       // running integral of the error
+
+        for (let i = 0; i <= duration / dt; i++) {
+            const error = r - output;
+            let command = kp * error + ki * integral;
+
+            // Derivative term (acts on the output, not on the error)
+            if (plant === "first") {
+                command = (tau * command + kd * output) / (tau + K * kd);
+            } else {
+                command -= kd * velocity;
+            }
+
+            // Actuator saturation
+            command = Math.max(-limit, Math.min(limit, command));
+
+            t.push(i * dt);
+            y.push(output);
+            u.push(command);
+
+            // Plant equations
+            if (plant === "first") {
+                output += dt * (K * command - output) / tau;
+            } else {
+                const acceleration = K * wn ** 2 * command
+                                   - 2 * zeta * wn * velocity
+                                   - wn ** 2 * output;
+                output += dt * velocity;
+                velocity += dt * acceleration;
+            }
+
+            integral += error * dt;
+        }
+
+        return { t, y, u };
+    }
+
+    // ===== 4. Response characteristics =====
+    // Returns [rise time, overshoot %, settling time, steady-state error %]
+    // null means "N/A"
+    function calculateMetrics(data, r) {
+        const { t, y } = data;
+
+        // Overshoot: how far the highest point goes above the setpoint
+        const peak = Math.max(...y);
+        const overshoot = Math.max(0, (peak - r) / r * 100);
+
+        // Final value = average of the last 2000 samples (the last 2 seconds)
+        const tail = y.slice(-2000);
+        const final = tail.reduce((a, b) => a + b, 0) / tail.length;
+
+        // Not settled if the end of the response is still moving
+        const stable = Math.max(...tail) - Math.min(...tail) < 0.001 * r;
+        if (!stable) return [null, overshoot, null, null];
+
+        const error = Math.abs(r - final) / r * 100;
+        if (final <= 0.000001) return [null, overshoot, null, error];
+
+        // Rise time: from 10% to 90% of the final value
+        const i10 = y.findIndex(v => v >= 0.1 * final);
+        const i90 = y.findIndex(v => v >= 0.9 * final);
+        const rise = (i10 >= 0 && i90 >= 0) ? t[i90] - t[i10] : null;
+
+        // Settling time: go back from the end until the output leaves the ±2% band
+        let i = y.length - 1;
+        while (i >= 0 && Math.abs(y[i] - final) <= 0.02 * final) i--;
+        const settling = t[i + 1] ?? null;
+
+        return [rise, overshoot, settling, error];
+    }
+
+    // ===== 5. Graphs =====
+    function drawGraphs(data, r) {
+        const { t, y, u } = data;
+
+        const layout = {
+            margin: { l: 55, r: 20, t: 35, b: 50 },
+            xaxis: { title: "Time (s)" },
+            legend: { orientation: "h", y: 1.15 }
+        };
+        const config = { responsive: true, displaylogo: false };
+
+        // A curve over time
+        function line(values, name, color) {
+            return { x: t, y: values, name: name, mode: "lines",
+                     line: { color: color, width: 2 } };
+        }
+
+        // A dashed horizontal line (setpoint, limits)
+        function horizontal(value, name, color) {
+            return { x: [0, duration], y: [value, value], name: name, mode: "lines",
+                     line: { color: color, dash: "dash" } };
+        }
+
+        Plotly.react("outputGraph", [
+            line(y, "Output", "#3478c0"),
+            horizontal(r, "Setpoint", "#64748b")
+        ], { ...layout, yaxis: { title: "Output y(t)" } }, config);
+
+        Plotly.react("controlGraph", [
+            line(u, "Control Signal", "#3478c0"),
+            horizontal(limit, "Upper Limit", "#c0392b"),
+            horizontal(-limit, "Lower Limit", "#c0392b")
+        ], { ...layout, yaxis: { title: "Control Signal u(t)", range: [-11, 11] } }, config);
+    }
+
+    // ===== 6. Predict, then check =====
+    function checkPrediction() {
+        const feedback = get("feedback");
+        const choices = names.map((name, i) => get("prediction" + i).value);
+
+        // All 4 predictions must be selected
+        if (choices.includes("")) {
+            feedback.textContent = "Select all predictions first.";
+            return;
+        }
+        // The gains must be different from the reference gains
+        if (current.key === referenceKey) {
+            feedback.textContent = "Change the controller gains first.";
+            return;
+        }
+
+        let score = 0;
+        let total = 0;
+        const lines = [];
+
+        names.forEach((name, i) => {
+            // Skip metrics that are N/A
+            if (current.metrics[i] === null || reference[i] === null) {
+                lines.push(`${name}: N/A`);
+                return;
+            }
+
+            // Did the value increase, decrease, or stay the same? (1% tolerance)
+            const diff = current.metrics[i] - reference[i];
+            const tolerance = Math.max(0.01, Math.abs(reference[i]) * 0.01);
+            let actual = diff > 0 ? "increase" : "decrease";
+            if (Math.abs(diff) <= tolerance) actual = "same";
+
+            const correct = choices[i] === actual;
+            total++;
+            if (correct) score++;
+
+            lines.push(`${name}: ${correct ? "Correct" : "Incorrect"} (${actual})`);
+        });
+
+        feedback.innerHTML = lines.join("<br>") + `<br>Score: ${score}/${total}`;
+
+        // The current result becomes the new reference
+        reference = [...current.metrics];
+        referenceKey = current.key;
+        get("referenceInfo").textContent = "New reference: " + referenceKey;
+    }
+
+    // ===== 7. Validation checks =====
+    function runValidation() {
+        // Test 1: P controller (Kp = 9) on K = 1, τ = 1.
+        // Closed loop: τ = 1/(1+9) = 0.1 s and SSE = 1/(1+9) = 10%
+        const data = simulate("first", 1, 1, 0, 1, 9, 0, 0, 1);
+        const index = data.y.findIndex(y => y >= 0.63212 * 0.9);   // 63.2% of the final value 0.9
+        const tau = data.t[index];
+        const error = calculateMetrics(data, 1)[3];
+
+        const pass1 = Math.abs(tau - 0.1) < 0.005
+                   && error !== null
+                   && Math.abs(error - 10) < 0.1;
+
+        // Test 2: PI controller with Kp = Ki = 1 -> ωn = 1 and ζ = 1
+        const K = 1, T = 1, kp = 1, ki = 1;
+        const wn = Math.sqrt(K * ki / T);
+        const zeta = (1 + K * kp) / (2 * Math.sqrt(T * K * ki));
+
+        const pass2 = Math.abs(wn - 1) < 0.001 && Math.abs(zeta - 1) < 0.001;
+
+        // Test 3: with integral action, the steady-state error should be ~0
+        const errors = [[1, 1], [2, 2], [3, 3]].map(([p, i]) => {
+            const piData = simulate("first", 1, 1, 0, 1, p, i, 0, 1);
+            return calculateMetrics(piData, 1)[3];
+        });
+        const pass3 = errors.every(e => e !== null && e < 0.1);
+
+        const status = pass => `<b>${pass ? "PASS" : "FAIL"}</b>`;
+
+        get("validationResults").innerHTML = `
+            Test 1: P Controller (Kp = 9)<br>
+            Expected: τ = 0.1 s, SSE = 10%<br>
+            Measured: τ = ${tau.toFixed(2)} s, SSE = ${format(error, "%")} — ${status(pass1)}<br><br>
+
+            Test 2: PI Controller (Kp = Ki = 1)<br>
+            ωn = ${wn.toFixed(2)} rad/s, ζ = ${zeta.toFixed(2)} — ${status(pass2)}<br><br>
+
+            Test 3: PI Steady-State Error<br>
+            SSE = ${errors.map(e => format(e, "%")).join(", ")} — ${status(pass3)}`;
+    }
+
+    // ===== 8. Update the whole page =====
+    // Runs on page load and every time a slider or dropdown changes
+    function update() {
+        const plant = get("plant").value;
+        const type = get("controller").value;
+
+        // Show the right plant sliders
+        get("firstParameters").hidden = plant !== "first";
+        get("secondParameters").hidden = plant === "first";
+
+        // Disable Ki and Kd when the controller does not use them
+        get("ki").disabled = !type.includes("I");
+        get("kd").disabled = !type.includes("D");
+
+        // Read all the values (a disabled gain counts as 0)
+        const K = num("K"), tau = num("tau");
+        const zeta = num("zeta"), wn = num("wn");
+        const kp = num("kp");
+        const ki = get("ki").disabled ? 0 : num("ki");
+        const kd = get("kd").disabled ? 0 : num("kd");
+        const r = num("r");
+
+        // Equations
+        get("plantEquation").textContent = plant === "first"
+            ? "G(s) = K / (τs + 1)"
+            : "G(s) = Kωn² / (s² + 2ζωns + ωn²)";
+
+        get("controllerEquation").textContent =
+            "u(t) = Kp e(t)"
+            + (type.includes("I") ? " + Ki ∫e(t)dt" : "")
+            + (type.includes("D") ? " − Kd dy/dt" : "");
+
+        // Numbers next to the sliders
+        for (const id of ["K", "tau", "zeta", "wn", "kp", "ki", "kd", "r"]) {
+            const value = get(id).disabled ? 0 : num(id);
+            get(id + "Value").textContent = value.toFixed(2);
+        }
+
+        // Simulate and show the response characteristics
+        const data = simulate(plant, K, tau, zeta, wn, kp, ki, kd, r);
+        const metrics = calculateMetrics(data, r);
+
+        metrics.forEach((value, i) => {
+            get("metric" + i).textContent = format(value, units[i]);
+        });
+
+        // If the plant or setpoint changed, start a new reference
+        const key = `Kp=${kp}, Ki=${ki}, Kd=${kd}`;
+        const plantKey = [plant, K, tau, zeta, wn, r].join(",");
+
+        if (!current || current.plantKey !== plantKey) {
+            reference = [...metrics];
+            referenceKey = key;
+            get("referenceInfo").textContent = "Reference: " + key;
+        }
+
+        current = { metrics, key, plantKey };
+        get("feedback").textContent = "";
+
+        drawGraphs(data, r);
+    }
+
+    // ===== 9. Start =====
+    // Update whenever any slider or dropdown changes
+    document.querySelectorAll('input[type="range"], #plant, #controller')
+        .forEach(element => element.addEventListener("input", update));
+
+    update();    // draw everything once when the page loads
+</script>
+</body>
+</html>
