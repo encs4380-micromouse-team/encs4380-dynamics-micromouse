@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,6 +41,25 @@
             max-width: 750px;
             margin: 0 auto;
         }
+        /* Introduction */
+        .intro-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 35px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+        .intro-card h3 {
+            color: #17365d;
+            font-size: 23px;
+            margin-top: 0;
+        }
+        .intro-card p {
+            color: #64748b;
+            line-height: 1.8;
+            font-size: 16px;
+        }
         /* Modules Section */
         .section-title {
             text-align: center;
@@ -49,7 +67,6 @@
             font-size: 27px;
             margin-bottom: 30px;
         }
-
         .modules-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -128,54 +145,188 @@
                 padding: 22px;
             }
         }
-
     </style>
 </head>
 <body>
 <div class="container">
+    
     <!-- Page Header -->
     <div class="header">
         <h1>Dynamic Characteristics Toolkit</h1>
         <h2>Interactive Learning Platform</h2>
         <p>
             An interactive educational toolkit for exploring
-            dynamic systems, analyzing system responses,
-            and understanding sensor behavior and feedback control.
+            dynamic system characteristics, analyzing system
+            responses, and understanding fundamental concepts
+            in feedback control and sensor behavior.
         </p>
     </div>
-    <!-- Homework Section -->
+    
+    <!-- Introduction -->
+    <div class="intro-card">
+        <h3>Welcome to the Dynamic Characteristics Toolkit</h3>
+        <p>
+            This platform provides interactive modules
+            designed to help students understand the behavior
+            of first-order and second-order dynamic systems
+            and PID controllers.
+            Users can adjust system parameters, observe
+            graphical responses, explore frequency-domain
+            characteristics, and test their understanding
+            through interactive activities.
+        </p>
+    </div>
 
-    <h2 class="section-title">Explore the Toolkits</h2>
+    <!-- Homework 1 -->
+    <h2 class="section-title">
+        Homework 1 - Dynamic Characteristics
+    </h2>
     <div class="modules-grid">
-        <!-- Homework 1 -->
+
+        <!-- Module 1 -->
         <div class="module-card">
-            <div class="module-number">HOMEWORK 01</div>
-            <h3>Dynamic Characteristics</h3>
+            <div class="module-number">MODULE 01</div>
+            <h3>First-Order Time Response</h3>
             <p>
-                Explore first-order and second-order dynamic systems.
-                Analyze time and frequency responses,
-                investigate system characteristics,
-                and test your understanding through
-                interactive sensor identification activities.
+                Explore the time-domain behavior of
+                first-order systems.
+                Adjust gain (K) and time constant (τ),
+                compare step and ramp responses,
+                analyze response characteristics,
+                and examine logarithmic error plots.
             </p>
-            <a href="hw1.html" class="module-button">
-                Open Homework 1
+            <a href="module1.html" class="module-button">
+                Open Module 1
             </a>
         </div>
-        <!-- Homework 2 -->
-        <div class="module-card">
-            <div class="module-number">HOMEWORK 02</div>
-            <h3>PID Control</h3>
-            <p>
-                Explore feedback control and PID controllers.
-                Investigate the effects of proportional,
-                integral, and derivative gains,
-                sensor dynamics, digital control,
-                and controller tuning through interactive simulations.
-            </p>
 
-            <a href="hw2.html" class="module-button">
-                Open Homework 2
+        <!-- Module 2 -->
+        <div class="module-card">
+            <div class="module-number">MODULE 02</div>
+            <h3>First-Order Frequency Response</h3>
+            <p>
+                Investigate the frequency-domain behavior
+                of first-order systems.
+                Explore how gain and time constant
+                affect magnitude, phase shift,
+                and frequency response characteristics.
+            </p>
+            <a href="module2.html" class="module-button">
+                Open Module 2
+            </a>
+        </div>
+
+        <!-- Module 3 -->
+        <div class="module-card">
+            <div class="module-number">MODULE 03</div>
+            <h3>Second-Order Response & State-Space</h3>
+            <p>
+                Analyze second-order dynamic systems
+                and their behavior.
+                Explore natural frequency, damping ratio,
+                transient response characteristics,
+                and state-space representations.
+            </p>
+            <a href="module3.html" class="module-button">
+                Open Module 3
+            </a>
+        </div>
+
+        <!-- Module 4 -->
+        <div class="module-card">
+            <div class="module-number">MODULE 04</div>
+            <h3>Guess the Sensor Challenge</h3>
+            <p>
+                Test your understanding of dynamic
+                characteristics through an interactive
+                sensor identification challenge.
+                Analyze system response graphs,
+                recognize response patterns,
+                and identify the most likely sensor.
+            </p>
+            <a href="module4.html" class="module-button">
+                Open Module 4
+            </a>
+        </div>
+    </div>
+
+    <!-- Homework 2 -->
+    <h2 class="section-title" style="margin-top: 50px;">
+        Homework 2 - PID Control
+    </h2>
+    <div class="modules-grid">
+
+        <!-- P1 -->
+        <div class="module-card">
+            <div class="module-number">P1</div>
+            <h3>PID Playground</h3>
+
+            <p>
+                Explore PID controllers and their effects
+                on first-order and second-order systems.
+                Adjust controller gains and analyze rise time,
+                overshoot, settling time, and steady-state error.
+            </p>
+            <a href="p1.html" class="module-button">
+                Open P1
+            </a>
+        </div>
+
+        <!-- P2 -->
+        <div class="module-card">
+            <div class="module-number">P2</div>
+            <h3>A Slow Sensor in the Loop</h3>
+            <p>
+                Investigate the effects of sensor dynamics
+                on closed-loop system performance.
+                Compare the true output with the measured
+                output and observe overshoot and oscillations.
+            </p>
+            <a href="p2.html" class="module-button">
+                Open P2
+            </a>
+        </div>
+
+        <!-- P3 -->
+        <div class="module-card">
+            <div class="module-number">P3</div>
+            <h3>Digital PID</h3>
+            <p>
+                Explore digital PID controllers,
+                sampling time, and anti-windup.
+                Analyze system performance and generate
+                Arduino PID controller code.
+            </p>
+            <a href="p3.html" class="module-button">
+                Open P3
+            </a>
+        </div>
+        
+        <!-- P4 -->
+        <div class="module-card">
+            <div class="module-number">P4</div>
+            <h3>Tuning Challenge</h3>
+            <p>
+                Test your understanding of PID tuning.
+                Adjust controller gains to meet the
+                required system performance specifications.
+            </p>
+            <a href="p4.html" class="module-button">
+                Open P4
+            </a>
+        </div>
+        
+        <!-- My System -->
+        <div class="module-card">
+            <div class="module-number">MY SYSTEM</div>
+            <h3>Micromouse Motor Control</h3>
+            <p>
+                Apply PID control to the Micromouse drive motor.
+                Explore the motor model, controller tuning,
+                system response, and Arduino implementation.
+            </p>
+            <a href="my-system.html" class="module-button">
+                Open My System
             </a>
         </div>
     </div>
