@@ -1,0 +1,925 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>P3 - Digital PID</title>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #243047;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 35px 25px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #17365d;
+            font-size: 35px;
+        }
+
+        h2 {
+            color: #3478c0;
+            font-size: 21px;
+            margin-top: 0;
+        }
+
+        p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Cards */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            min-width: 0;
+        }
+
+        /* Controls */
+
+        label {
+            display: block;
+            margin: 15px 0 8px;
+            font-size: 15px;
+        }
+
+        .value {
+            float: right;
+            color: #3478c0;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #3478c0;
+        }
+
+        input[type="checkbox"] {
+            accent-color: #3478c0;
+            cursor: pointer;
+        }
+
+        input:disabled {
+            opacity: 0.4;
+        }
+
+        select {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #dbe2ea;
+            border-radius: 7px;
+            background: white;
+            color: #243047;
+        }
+
+        button, .module-button {
+            display: inline-block;
+            background: #3478c0;
+            color: white;
+            border: none;
+            text-decoration: none;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover, .module-button:hover {
+            background: #235d99;
+        }
+
+        .equation {
+            background: #f4f7fb;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            color: #17365d;
+            margin-top: 15px;
+        }
+
+        .note {
+            font-size: 13px;
+        }
+
+        /* Graphs and Metrics */
+
+        .graph {
+            height: 330px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .metric {
+            background: #f4f7fb;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .metric strong {
+            color: #17365d;
+            font-size: 22px;
+        }
+
+        /* Arduino Code */
+
+        pre {
+            background: #f4f7fb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 35px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 850px) {
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .container {
+                padding: 20px 12px;
+            }
+
+            .header h1 {
+                font-size: 27px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <a href="index.html" class="module-button">
+        Back to Modules
+    </a>
+
+    <div class="header">
+
+        <h1>P3 - Digital PID</h1>
+
+        <p>
+            Explore the effects of sampling time
+            and anti-windup on digital PID control.
+        </p>
+
+    </div>
+
+
+    <div class="grid">
+
+        <!-- Plant Parameters -->
+
+        <div class="card">
+
+            <h2>Plant Parameters</h2>
+
+            <div class="equation">
+                G(s) = K / (τs + 1)
+            </div>
+
+            <label>System Gain (K)
+                <span class="value" id="KValue"></span>
+            </label>
+
+            <input type="range" id="K"
+                min="0.5" max="5" step="0.1" value="1">
+
+            <label>Time Constant (τ)
+                <span class="value" id="tauValue"></span>
+            </label>
+
+            <input type="range" id="tau"
+                min="0.1" max="5" step="0.1" value="1">
+
+            <label>Setpoint (r)
+                <span class="value" id="rValue"></span>
+            </label>
+
+            <input type="range" id="r"
+                min="0.5" max="5" step="0.1" value="1">
+
+        </div>
+
+
+        <!-- Controller Parameters -->
+
+        <div class="card">
+
+            <h2>Controller Parameters</h2>
+
+            <label>Controller Type</label>
+
+            <select id="controller">
+                <option value="P">P Controller</option>
+                <option value="PI">PI Controller</option>
+                <option value="PD">PD Controller</option>
+                <option value="PID" selected>PID Controller</option>
+            </select>
+
+            <div class="equation" id="controllerEquation"></div>
+
+            <label>Proportional Gain (Kp)
+                <span class="value" id="kpValue"></span>
+            </label>
+
+            <input type="range" id="kp"
+                min="0" max="20" step="0.1" value="5">
+
+            <label>Integral Gain (Ki)
+                <span class="value" id="kiValue"></span>
+            </label>
+
+            <input type="range" id="ki"
+                min="0" max="10" step="0.1" value="3">
+
+            <label>Derivative Gain (Kd)
+                <span class="value" id="kdValue"></span>
+            </label>
+
+            <input type="range" id="kd"
+                min="0" max="2" step="0.05" value="0">
+
+        </div>
+
+
+        <!-- Digital PID Settings -->
+
+        <div class="card">
+
+            <h2>Digital PID Settings</h2>
+
+            <label>Sampling Time (Ts)
+                <span class="value" id="tsValue"></span>
+            </label>
+
+            <input type="range" id="ts"
+                min="0.01" max="2" step="0.01" value="0.05">
+
+            <p>
+                Sampling Frequency:
+                <strong id="frequency"></strong>
+            </p>
+
+            <label>
+                <input type="checkbox" id="antiWindup" checked>
+                Enable Anti-Windup
+            </label>
+
+            <p class="note" id="windupInfo"></p>
+
+            <div class="equation">
+                Control Limits: −10 ≤ u ≤ 10
+            </div>
+
+            <p class="note">
+                The controller updates every Ts seconds.
+                The control signal remains constant
+                between consecutive samples.
+            </p>
+
+        </div>
+
+
+        <!-- Predict, Then Check -->
+
+        <div class="card">
+
+            <h2>Predict, Then Check</h2>
+
+            <p class="note">
+                Predict what happens when the sampling
+                time increases.
+            </p>
+
+            <label>Overshoot</label>
+
+            <select id="predictOS">
+                <option value="">Select Prediction</option>
+                <option value="increase">Increase</option>
+                <option value="decrease">Decrease</option>
+                <option value="same">No Change</option>
+            </select>
+
+            <label>Settling Time</label>
+
+            <select id="predictST">
+                <option value="">Select Prediction</option>
+                <option value="increase">Increase</option>
+                <option value="decrease">Decrease</option>
+                <option value="same">No Change</option>
+            </select>
+
+            <p id="referenceInfo" class="note"></p>
+
+            <button onclick="checkPrediction()">
+                Check Prediction
+            </button>
+
+            <p id="feedback" class="note"></p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Graphs -->
+
+    <div class="grid">
+
+        <div class="card">
+
+            <h2>Output vs. Setpoint</h2>
+
+            <div class="graph" id="outputGraph"></div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Stair-step Control Signal</h2>
+
+            <div class="graph" id="controlGraph"></div>
+
+            <p class="note">
+                The control signal is held constant
+                between sampling instants.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Response Characteristics -->
+
+    <div class="card" style="margin-bottom: 20px;">
+
+        <h2>Response Characteristics</h2>
+
+        <div class="metrics" id="metrics"></div>
+
+        <p class="note">
+            Rise time: 10% to 90% of the steady-state output.
+            Settling time: within ±2% of the steady-state output.
+            Overshoot and SSE are relative to the setpoint.
+            N/A indicates an unsettled or undefined response.
+        </p>
+
+    </div>
+
+
+    <!-- Arduino Code -->
+
+    <div class="card">
+
+        <div class="code-header">
+
+            <h2>Generated Arduino Code</h2>
+
+            <button onclick="copyCode()">
+                Copy Code
+            </button>
+
+        </div>
+
+        <p class="note">
+            The code updates automatically based on the
+            selected gains, sampling time, and anti-windup.
+        </p>
+
+        <pre id="arduinoCode"></pre>
+
+        <p id="copyFeedback" class="note"></p>
+
+        <p class="note">
+            Adapt readSensor() and writeActuator() to your
+            actual sensor and motor driver hardware.
+        </p>
+
+    </div>
+
+
+    <div class="footer">
+
+        <p>ENCS4380 - Interfacing Techniques</p>
+        <p>PID Control Toolkit | Micromouse Project</p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const dt = 0.001;
+    const duration = 30;
+    const limit = 10;
+
+    const get = id => document.getElementById(id);
+    const num = id => Number(get(id).value);
+
+    const names = [
+        "Rise Time", "Overshoot",
+        "Settling Time", "Steady-State Error"
+    ];
+
+    const units = [" s", "%", " s", "%"];
+
+    let current, reference;
+
+
+    get("metrics").innerHTML = names.map((name, i) => `
+        <div class="metric">
+            <p>${name}</p>
+            <strong id="metric${i}">--</strong>
+        </div>
+    `).join("");
+
+
+    // Digital PID and Euler Simulation
+
+    function simulate(K, tau, ts, kp, ki, kd, r, aw) {
+
+        let t = [], y = [], sampleTime = [], control = [];
+
+        let output = 0;
+        let integral = 0;
+        let previousError = 0;
+        let u = 0;
+
+        let sampleSteps = Math.round(ts / dt);
+
+        for (let i = 0; i <= duration / dt; i++) {
+
+            let time = i * dt;
+
+            // Update PID only at sampling instants
+
+            if (i % sampleSteps === 0) {
+
+                let error = r - output;
+
+                let P = kp * error;
+                let D = kd * (error - previousError) / ts;
+
+                let newIntegral = ki > 0
+                    ? integral + error * ts : 0;
+
+                let raw = P + ki * newIntegral + D;
+
+                // Conditional Integration
+
+                let windup =
+                    (raw > limit && error > 0) ||
+                    (raw < -limit && error < 0);
+
+                if (!aw || !windup) {
+                    integral = newIntegral;
+                }
+
+                // PID output and saturation
+
+                raw = P + ki * integral + D;
+
+                u = Math.max(-limit, Math.min(limit, raw));
+
+                previousError = error;
+
+                sampleTime.push(time);
+                control.push(u);
+            }
+
+            t.push(time);
+            y.push(output);
+
+            // Update plant at every Euler step
+
+            output += dt * (K * u - output) / tau;
+        }
+
+        // Extend the last held control value to the end
+
+        if (sampleTime[sampleTime.length - 1] < duration) {
+            sampleTime.push(duration);
+            control.push(u);
+        }
+
+        return { t, y, sampleTime, control };
+    }
+
+
+    // Response Characteristics
+
+    function calculateMetrics(data, r) {
+
+        let { t, y } = data;
+
+        let peak = Math.max(...y);
+        let overshoot = Math.max(0, (peak - r) / r * 100);
+
+        let tail = y.slice(-2000);
+        let final = tail.reduce((a, b) => a + b, 0)
+                    / tail.length;
+
+        let stable = Math.max(...tail) - Math.min(...tail)
+                     < 0.001 * r;
+
+        if (!stable)
+            return [null, overshoot, null, null];
+
+        let error = Math.abs(r - final) / r * 100;
+
+        if (final <= 0.000001)
+            return [null, overshoot, null, error];
+
+        let i10 = y.findIndex(v => v >= 0.1 * final);
+        let i90 = y.findIndex(v => v >= 0.9 * final);
+
+        let rise = i10 >= 0 && i90 >= 0
+            ? t[i90] - t[i10] : null;
+
+        let i = y.length - 1;
+
+        while (i >= 0 && Math.abs(y[i] - final) <= 0.02 * final)
+            i--;
+
+        let settling = t[i + 1] ?? null;
+
+        return [rise, overshoot, settling, error];
+    }
+
+
+    // Draw Graphs
+
+    function drawGraphs(data, r) {
+
+        let layout = {
+            margin: { l: 55, r: 20, t: 35, b: 50 },
+            xaxis: { title: "Time (s)" },
+            legend: { orientation: "h", y: 1.15 }
+        };
+
+        let config = {
+            responsive: true,
+            displaylogo: false
+        };
+
+        function horizontal(value, name, color) {
+
+            return {
+                x: [0, duration],
+                y: [value, value],
+                name: name,
+                mode: "lines",
+                line: { color: color, dash: "dash" }
+            };
+        }
+
+        Plotly.react("outputGraph", [
+
+            {
+                x: data.t,
+                y: data.y,
+                name: "Output",
+                mode: "lines",
+                line: { color: "#3478c0", width: 2 }
+            },
+
+            horizontal(r, "Setpoint", "#64748b")
+
+        ], {
+            ...layout,
+            yaxis: { title: "Output y(t)" }
+        }, config);
+
+
+        Plotly.react("controlGraph", [
+
+            {
+                x: data.sampleTime,
+                y: data.control,
+                name: "Control Signal",
+                mode: "lines",
+
+                line: {
+                    color: "#3478c0",
+                    width: 2,
+                    shape: "hv"
+                }
+            },
+
+            horizontal(limit, "Upper Limit", "#c0392b"),
+            horizontal(-limit, "Lower Limit", "#c0392b")
+
+        ], {
+            ...layout,
+            yaxis: {
+                title: "Control Signal u[k]",
+                range: [-11, 11]
+            }
+        }, config);
+    }
+
+
+    // Predict, Then Check
+
+    function checkPrediction() {
+
+        let os = get("predictOS").value;
+        let st = get("predictST").value;
+
+        if (!os || !st) {
+
+            get("feedback").textContent =
+                "Select both predictions first.";
+
+            return;
+        }
+
+        if (current.ts <= reference.ts) {
+
+            get("feedback").textContent =
+                "Increase the sampling time first.";
+
+            return;
+        }
+
+        function compare(oldValue, newValue, prediction) {
+
+            if (newValue === null && oldValue !== null)
+                return "Response did not settle within 30 s.";
+
+            if (oldValue === null || newValue === null)
+                return "N/A - unsettled response.";
+
+            let diff = newValue - oldValue;
+
+            let actual = Math.abs(diff) <= 0.01
+                ? "same" : diff > 0 ? "increase" : "decrease";
+
+            return (prediction === actual ? "Correct" : "Incorrect")
+                   + " (" + actual + ")";
+        }
+
+        get("feedback").innerHTML =
+
+            "Overshoot: " +
+            compare(reference.metrics[1],
+                    current.metrics[1], os) +
+
+            "<br>Settling Time: " +
+            compare(reference.metrics[2],
+                    current.metrics[2], st);
+    }
+
+
+    // Generate Arduino Code
+
+    function generateCode(kp, ki, kd, ts, r, aw) {
+
+        get("arduinoCode").textContent = `// Digital PID Controller
+// Implement these functions for your hardware.
+
+float readSensor();
+void writeActuator(float u);
+
+float Kp = ${kp.toFixed(2)};
+float Ki = ${ki.toFixed(2)};
+float Kd = ${kd.toFixed(2)};
+float Ts = ${ts.toFixed(3)};
+
+float setpoint = ${r.toFixed(2)};
+bool antiWindup = ${aw};
+
+float integral = 0;
+float previousError = 0;
+
+const float uMin = -10.0;
+const float uMax = 10.0;
+
+const unsigned long period = ${Math.round(ts * 1000)};
+unsigned long lastTime = 0;
+
+void setup() {
+    // Initialize sensor and motor driver here.
+    lastTime = millis() - period;
+}
+
+void loop() {
+
+    unsigned long now = millis();
+
+    if (now - lastTime >= period) {
+
+        lastTime = now;
+
+        float y = readSensor();
+        float error = setpoint - y;
+
+        float P = Kp * error;
+        float D = Kd * (error - previousError) / Ts;
+
+        float newIntegral = Ki > 0
+            ? integral + error * Ts : 0;
+
+        float raw = P + Ki * newIntegral + D;
+
+        bool windup =
+            (raw > uMax && error > 0) ||
+            (raw < uMin && error < 0);
+
+        if (!antiWindup || !windup) {
+            integral = newIntegral;
+        }
+
+        float u = P + Ki * integral + D;
+
+        u = constrain(u, uMin, uMax);
+
+        writeActuator(u);
+
+        previousError = error;
+    }
+}`;
+    }
+
+
+    // Copy Arduino Code
+
+    async function copyCode() {
+
+        try {
+
+            await navigator.clipboard.writeText(
+                get("arduinoCode").textContent
+            );
+
+            get("copyFeedback").textContent =
+                "Code copied successfully!";
+
+        } catch {
+
+            get("copyFeedback").textContent =
+                "Copy failed. Please select and copy the code manually.";
+        }
+    }
+
+
+    // Update System
+
+    function update() {
+
+        let type = get("controller").value;
+
+        get("ki").disabled = !type.includes("I");
+        get("kd").disabled = !type.includes("D");
+
+        let K = num("K");
+        let tau = num("tau");
+        let ts = num("ts");
+
+        let kp = num("kp");
+        let ki = get("ki").disabled ? 0 : num("ki");
+        let kd = get("kd").disabled ? 0 : num("kd");
+
+        let r = num("r");
+
+        let aw = get("antiWindup").checked;
+
+        get("controllerEquation").textContent =
+            "u[k] = Kp e[k]"
+            + (type.includes("I") ? " + Ki Ts Σe[j]" : "")
+            + (type.includes("D")
+                ? " + Kd(e[k] − e[k−1])/Ts" : "");
+
+        ["K", "tau", "ts", "kp", "ki", "kd", "r"]
+            .forEach(id => {
+
+                let value = get(id).disabled ? 0 : num(id);
+
+                get(id + "Value").textContent =
+                    value.toFixed(2);
+            });
+
+        get("frequency").textContent =
+            (1 / ts).toFixed(2) + " Hz";
+
+        get("windupInfo").textContent = aw
+
+            ? "Anti-Windup ON: Integration is limited during saturation."
+
+            : "Anti-Windup OFF: The integral continues accumulating during saturation.";
+
+
+        let data = simulate(K, tau, ts, kp, ki, kd, r, aw);
+
+        let metrics = calculateMetrics(data, r);
+
+        metrics.forEach((value, i) => {
+
+            get("metric" + i).textContent = value === null
+
+                ? "N/A"
+                : value.toFixed(2) + units[i];
+        });
+
+
+        // Automatically save prediction reference
+
+        let key = [K, tau, kp, ki, kd, r, aw].join(",");
+
+        if (!current || current.key !== key) {
+            reference = { ts, metrics };
+        }
+
+        current = { ts, metrics, key };
+
+        get("referenceInfo").textContent =
+            "Reference sampling time: "
+            + reference.ts.toFixed(2) + " s";
+
+        get("feedback").textContent = "";
+        get("copyFeedback").textContent = "";
+
+        drawGraphs(data, r);
+
+        generateCode(kp, ki, kd, ts, r, aw);
+    }
+
+
+    document.querySelectorAll(
+        'input[type="range"], #controller, #antiWindup'
+    ).forEach(element => {
+
+        element.addEventListener("input", update);
+    });
+
+    update();
+
+</script>
+
+</body>
+</html>
