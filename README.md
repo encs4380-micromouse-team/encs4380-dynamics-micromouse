@@ -1,4 +1,3 @@
-
 # Dynamic Characteristics Interactive Toolkit
 
 **ENCS4380: Interfacing Techniques [Birzeit University]**
@@ -135,3 +134,79 @@ Each of the two parameters is worth **50 points**. The current implementation aw
 | > 20% | 0 |
 
 The round score is out of 100; the session score is the average of completed rounds, also out of 100.
+
+---
+
+## Homework 2: PID Control
+
+This homework extends the toolkit by introducing feedback control and showing how P, PI, and PID controllers affect the behavior of dynamic systems.
+
+The main goal is to understand how controller gains influence response speed, overshoot, settling time, and steady-state error, and how these concepts can be applied to a real system.
+
+---
+
+### Part 1: P, PI, and PID Control
+
+This part introduces the three main feedback controllers and demonstrates how their gains affect the response of a first-order system.
+
+We focused on three control actions:
+
+- **Proportional (Kp):** responds to the current error and affects how quickly the system reacts.
+- **Integral (Ki):** accumulates the error over time and helps eliminate steady-state error.
+- **Derivative (Kd):** responds to the rate of change of the error and can improve damping and reduce overshoot.
+
+Users can adjust Kp, Ki, and Kd and observe how different controller configurations affect the system response.
+
+The simulation allows users to compare P, PI, and PID control in terms of response speed, overshoot, settling time, and steady-state error.
+
+---
+
+### Part 2: Controller Design
+
+This part connects the desired system performance to the controller parameters.
+
+The main design specifications are:
+
+- **Settling Time (Ts):** how quickly the system should reach and remain near the target.
+- **Damping Ratio (ζ):** determines the damping behavior of the response.
+- **Natural Frequency (ωn):** relates to how quickly the system responds.
+
+The program uses these specifications to calculate controller gains and evaluate the resulting closed-loop response.
+
+---
+
+### Part 3: Digital PID Control
+
+This part introduces the digital implementation of PID control, where the controller calculates its output at fixed sampling intervals.
+
+We explored:
+
+- The discrete PID equation.
+- The effect of sampling time.
+- PWM output limits.
+- Integral anti-windup.
+- Arduino code generation.
+
+These features demonstrate how a continuous controller can be implemented in a microcontroller-based system.
+
+---
+
+## My System: Micromouse Motor Speed Control
+
+This section applies PI control to our Micromouse robot, which uses two GA12-N20 DC motors with encoders, an ESP32 microcontroller, and a DRV8833 motor driver.
+
+### How It Works
+
+1. **Motor Identification:** The user enters PWM step-test measurements for both motors. The system calculates K and τ and identifies each motor's first-order model.
+
+2. **Controller Specifications:** The user selects the target RPM, desired settling time (Ts), and damping ratio (ζ).
+
+3. **Natural Frequency Calculation:** The system calculates ωn from Ts and ζ.
+
+4. **PI Gains Calculation:** The program calculates Kp and Ki separately for each motor.
+
+5. **Closed-Loop Simulation:** Both motors are simulated using PI control, PWM limits (0–100%), and anti-windup.
+
+6. **Performance Evaluation & Automatic Tuning:** The system calculates rise time, settling time, overshoot, and steady-state error. If the design fails, automatic tuning searches for improved specifications and recalculates the gains. The final speed and PWM responses are displayed in graphs.
+
+7. **Arduino Code Generation:** The program generates ESP32 code for both motors, with editable GPIO assignments and options to copy or download the code.
