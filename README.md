@@ -128,8 +128,7 @@ Each of the two parameters is worth **50 points**. The current implementation aw
 
 | Error | Points |
 |-------|--------|
-| ≤ 5% | 50 |
-| > 5% and ≤ 10% | 35 |
+| ≤ 10% | 50 |
 | > 10% and ≤ 20% | 25 |
 | > 20% | 0 |
 
@@ -145,59 +144,45 @@ The main goal is to understand how controller gains influence response speed, ov
 
 ---
 
-### Part 1: P, PI, and PID Control
+### Part 1: PID Playground
 
-This part introduces the three main feedback controllers and demonstrates how their gains affect the response of a first-order system.
+This part explores P, PI, and PID controllers for first-order and second-order plants. Users can adjust the controller gains (**Kp, Ki, Kd**), plant parameters, and setpoint to see how feedback changes the response.
 
-We focused on three control actions:
-
-- **Proportional (Kp):** responds to the current error and affects how quickly the system reacts.
-- **Integral (Ki):** accumulates the error over time and helps eliminate steady-state error.
-- **Derivative (Kd):** responds to the rate of change of the error and can improve damping and reduce overshoot.
-
-Users can adjust Kp, Ki, and Kd and observe how different controller configurations affect the system response.
-
-The simulation allows users to compare P, PI, and PID control in terms of response speed, overshoot, settling time, and steady-state error.
+The page displays the closed-loop response alongside the setpoint, the control signal and its limits, and performance measurements including **rise time, overshoot, settling time, and steady-state error**. A **Predict, Then Check** activity and validation checks help users test their understanding.
 
 ---
 
-### Part 2: Controller Design
+### Part 2: A Slow Sensor in the Loop
 
-This part connects the desired system performance to the controller parameters.
+This part demonstrates how sensor dynamics affect feedback control. Users adjust the **sensor time constant (τs)** and PID gains, then compare the **true plant output** with the **measured sensor output**.
 
-The main design specifications are:
-
-- **Settling Time (Ts):** how quickly the system should reach and remain near the target.
-- **Damping Ratio (ζ):** determines the damping behavior of the response.
-- **Natural Frequency (ωn):** relates to how quickly the system responds.
-
-The program uses these specifications to calculate controller gains and evaluate the resulting closed-loop response.
+The simulation shows how measurement lag can change overshoot and introduce oscillations. A **Predict, Then Check** activity encourages users to anticipate the effect before testing it.
 
 ---
 
-### Part 3: Digital PID Control
+### Part 3: Digital PID
 
-This part introduces the digital implementation of PID control, where the controller calculates its output at fixed sampling intervals.
+This part explores PID control implemented at discrete sampling intervals. Users adjust the **sampling time (Ts)** and PID gains, observe the sampled or stair-step control signal, and compare behavior with **anti-windup enabled or disabled**.
 
-We explored:
+The page includes the discrete PID equation, PWM output limits, and an **Arduino code generator**. The generated code is a general educational template: hardware-specific sensor-reading and actuator-output functions must be implemented before using it on a physical system.
 
-- The discrete PID equation.
-- The effect of sampling time.
-- PWM output limits.
-- Integral anti-windup.
-- Arduino code generation.
+---
 
-These features demonstrate how a continuous controller can be implemented in a microcontroller-based system.
+### Part 4: Tuning Challenge
+
+This part challenges users to tune PID gains for a **randomly generated hidden first-order or second-order plant**. Users adjust the gains and evaluate the response against specified limits for **overshoot, settling time, and steady-state error**.
+
+The page reports **PASS/FAIL feedback** for each requirement, calculates a score, and allows users to start a new challenge. A **Predict, Then Check** activity helps connect tuning decisions with their effects on system behavior.
 
 ---
 
 ## My System: Micromouse Motor Speed Control
 
-This section applies PI control to our Micromouse robot, which uses two GA12-N20 DC motors with encoders, an ESP32 microcontroller, and a DRV8833 motor driver.
+This section applies PI control to our Micromouse robot, which uses two **GA12-N20 6V, 300 RPM DC geared motors with encoders**, an **ESP32** microcontroller, and a **DRV8833** motor driver.
 
 ### How It Works
 
-1. **Motor Identification:** The user enters PWM step-test measurements for both motors. The system calculates K and τ and identifies each motor's first-order model.
+1. **Motor Identification:** The user can enter PWM step-test measurements (time and RPM) for both motors or explore the workflow with demonstration data. The system calculates K and τ and identifies each motor's first-order model.
 
 2. **Controller Specifications:** The user selects the target RPM, desired settling time (Ts), and damping ratio (ζ).
 
@@ -209,4 +194,6 @@ This section applies PI control to our Micromouse robot, which uses two GA12-N20
 
 6. **Performance Evaluation & Automatic Tuning:** The system calculates rise time, settling time, overshoot, and steady-state error. If the design fails, automatic tuning searches for improved specifications and recalculates the gains. The final speed and PWM responses are displayed in graphs.
 
-7. **Arduino Code Generation:** The program generates ESP32 code for both motors, with editable GPIO assignments and options to copy or download the code.
+7. **Arduino Code Generation:** The program generates ESP32 code for both motors, with GPIO assignments and options to copy or download the code. Encoder counts per output-shaft revolution (CPR) and wiring must be verified for the actual hardware before deployment.
+
+> **Demo data note:** Demonstration motor responses are simulated examples, not measured results from our physical motors. Real step-test readings can be entered to identify the corresponding motor models.
