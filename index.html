@@ -69,10 +69,11 @@
         }
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 25px;
         }
         .module-card {
+            min-width: 0;
             background: white;
             border-radius: 15px;
             padding: 30px;
@@ -102,6 +103,10 @@
             line-height: 1.7;
             flex-grow: 1;
         }
+        .module-card.my-system-card {
+            grid-column: 1 / -1;
+        }
+
         /* Buttons */
         .module-button {
             display: inline-block;
@@ -128,6 +133,12 @@
             font-size: 14px;
         }
         /* Responsive Design */
+        @media (max-width: 1100px) {
+            .modules-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 850px) {
             .modules-grid {
                 grid-template-columns: 1fr;
@@ -317,7 +328,7 @@
         </div>
         
         <!-- My System -->
-        <div class="module-card">
+        <div class="module-card my-system-card">
             <div class="module-number">MY SYSTEM</div>
             <h3>Micromouse Motor Control</h3>
             <p>
