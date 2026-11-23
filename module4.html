@@ -182,7 +182,7 @@
                 <div class="result-box"><small>Session Average</small><strong id="totalScore">— / 100</strong></div>
             </div>
             <p class="hint">Each parameter is worth 50 points.</p>
-            <p class="note">Error ≤ 5%: 50 points · 5–10%: 35 points · 10–20%: 25 points · Over 20%: 0 points.</p>
+            <p class="note">Error ≤ 10%: 50 points · 10–20%: 25 points · Over 20%: 0 points.</p>
             <div id="scores"></div>
         </section>
     </div>
@@ -406,8 +406,7 @@
         const error = Math.abs(guess - actual) / actual * 100;
 
         let points = 0;
-        if (error <= 5) points = 50;
-        else if (error <= 10) points = 35;
+        if (error <= 10) points = 50;
         else if (error <= 20) points = 25;
 
         return { error: error, points: points };
