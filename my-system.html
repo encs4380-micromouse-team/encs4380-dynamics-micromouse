@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My System | Micromouse PI Speed Control</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        /* ===== 1. Page basics ===== */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --gray: #66758b;
+            --bg: #f4f7fb;
+            --text: #243047;
+            --line: #dce5f0;
+            --soft: #eef4fb;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font: 14px/1.55 Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .container { max-width: 1530px; margin: 0 auto; padding: 28px 24px 50px; }
+
+        h1 { color: var(--navy); font-size: 30px; margin: 0 0 6px; }
+        h2 { color: var(--navy); font-size: 16px; margin: 0; }
+        h3 { color: var(--navy); font-size: 13px; margin: 12px 0 6px; }
+        p  { margin: 0; color: var(--gray); }
+        .explain { font-size: 13px; margin: 5px 0 12px; }
+        .note { font-size: 12px; }
+
+        /* ===== 2. Header and layout ===== */
+        .header { text-align: center; margin-bottom: 25px; }
+
+        /* Left = design steps, right = generated code */
+        .layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr); gap: 20px; align-items: start; }
+        .card { background: white; border-radius: 13px; padding: 20px 22px; box-shadow: 0 4px 20px rgba(23, 44, 74, 0.05); min-width: 0; }
+        .card-title { font-size: 19px; margin-bottom: 5px; }
+        .sticky { position: sticky; top: 15px; }
+        .code-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+        /* ===== 3. Steps ===== */
+        .step { padding: 20px 0; border-top: 1px solid var(--line); }
+        .step:first-of-type { border-top: 0; padding-top: 5px; }
+        .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+        .number {
+            flex: none;
+            display: grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 50%;
+            background: var(--soft);
+            color: var(--blue);
+            font-weight: bold;
+        }
+
+        /* ===== 4. Inputs and buttons ===== */
+        .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+        label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #41516a; }
+        input, textarea {
+            width: 100%;
+            min-width: 0;
+            padding: 9px 10px;
+            border: 1px solid #ccd8e6;
+            border-radius: 7px;
+            font: inherit;
+            color: var(--text);
+        }
+        input:focus, textarea:focus { outline: 2px solid #b9d7f5; border-color: var(--blue); }
+        textarea { font: 12px/1.5 Consolas, monospace; resize: vertical; }
+        textarea.data { min-height: 112px; }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+        button { padding: 10px 13px; border: 0; border-radius: 7px; background: var(--blue); color: white; font: bold 12px Arial; cursor: pointer; }
+        button.alt { background: #e9f1fa; color: var(--navy); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* ===== 5. Messages and results ===== */
+        .status {
+            margin-top: 11px;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f7f9fd;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .status.ok   { border-color: #b7e1cb; background: #f0faf4; color: #185c3d; }
+        .status.warn { border-color: #f1d9aa; background: #fffaf0; color: #80580d; }
+        .status.bad  { border-color: #efc4c0; background: #fff5f4; color: #8d342d; }
+
+        .results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 10px; }
+        .result { padding: 11px; border: 1px solid #e6edf6; border-radius: 9px; background: #f3f7fc; }
+        .result .k { font-size: 11px; color: var(--gray); }
+        .result .v { margin: 3px 0; font-size: 19px; font-weight: bold; color: var(--navy); }
+        .result .sub { font-size: 11px; color: var(--gray); }
+
+        .formula {
+            margin: 10px 0;
+            padding: 11px 13px;
+            border-left: 3px solid var(--blue);
+            border-radius: 0 7px 7px 0;
+            background: #f7faff;
+            font-size: 13px;
+            overflow: auto;
+        }
+        .formula b { color: var(--navy); }
+        .plot { width: 100%; height: 245px; }
+
+        /* ===== 6. Hardware table and code box ===== */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 9px 8px; border-bottom: 1px solid #e9eef5; text-align: left; }
+        th { background: #f7f9fc; color: #566982; }
+        details { margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; }
+        summary { font-weight: bold; color: var(--navy); cursor: pointer; }
+        .code { height: 590px; padding: 14px; border: 0; border-radius: 9px; background: #142238; color: #e3eefb; white-space: pre; tab-size: 2; }
+
+        /* ===== 7. Small screens ===== */
+        @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .sticky { position: static; } }
+        @media (max-width: 530px) {
+            .container { padding: 17px 12px; }
+            .card { padding: 17px; }
+            .fields, .results { grid-template-columns: 1fr; }
+            h1 { font-size: 25px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h1>My System — Micromouse Speed Control</h1>
+        <p>Identify both motors → choose specifications → calculate PI gains → simulate → tune → generate ESP32 code</p>
+    </div>
+    <div class="layout">
+        <!-- ===== LEFT: design steps ===== -->
+        <section class="card">
+            <h2 class="card-title">Controller Design & Simulation</h2>
+            <p class="explain">Follow the numbered steps. Each calculation appears separately, with its formula and result.</p>
+            <!-- Step 1: motor measurements -->
+            <div class="step">
+                <div class="step-head"><span class="number">1</span><h2>Measure the motors (Open-Loop Step Test)</h2></div>
+                <p class="explain">Give each motor a fixed PWM step, with PI OFF. Record time and encoder RPM. <b>No target speed is used in this test.</b> The motor settles at whatever RPM the PWM produces.</p>
+                <div class="fields">
+                    <div><label>PWM before step (%)</label><input id="pwmBefore" type="number" value="0" min="0" max="100"></div>
+                    <div><label>PWM after step (%)</label><input id="pwmAfter" type="number" value="50" min="0" max="100"></div>
+                    <div><label>Left motor readings (time_s,rpm)</label><textarea class="data" id="leftCSV" placeholder="time_s,rpm&#10;0,0&#10;0.1,15&#10;..."></textarea></div>
+                    <div><label>Right motor readings (time_s,rpm)</label><textarea class="data" id="rightCSV" placeholder="time_s,rpm&#10;0,0&#10;0.1,16&#10;..."></textarea></div>
+                </div>
+                <div class="actions">
+                    <button id="identifyBtn">Calculate K & τ for both</button>
+                    <button class="alt" id="demoBtn">Load demo measurements</button>
+                    <button class="alt" id="clearBtn">Clear</button>
+                </div>
+                <div id="identStatus" class="status">Waiting for measurements. Use the demo button to explore the interface; demo data is not real calibration.</div>
+                <div id="plantResults" hidden>
+                    <div class="results" id="plantCards"></div>
+                    <div class="formula"><b>Identified plant models</b><div id="plantModels"></div>
+                        <span class="note">K = ΔRPM / ΔPWM; τ is estimated from the 63.2% crossing. First-order approximation.</span></div>
+                    <div id="stepPlot" class="plot"></div>
+                </div>
+            </div>
+            <!-- Step 2: specifications -->
+            <div class="step">
+                <div class="step-head"><span class="number">2</span><h2>Choose speed & design specifications</h2></div>
+                <div class="fields">
+                    <div><label>Target speed — both motors (RPM)</label><input id="targetRPM" type="number" value="200" min="1">
+                        <p class="explain">The speed each motor should reach during closed-loop control.</p></div>
+                    <div><label>Desired settling time Ts (s)</label><input id="desiredTs" type="number" value="1.0" min=".1" step=".1">
+                        <p class="explain">How quickly the motor should reach and stay near the target speed.</p></div>
+                    <div><label>Damping ratio ζ</label><input id="desiredZeta" type="number" value=".7" min=".6" max=".8" step=".05">
+                        <p class="explain">Controls how oscillatory the response is. Required design range: 0.60–0.80.</p></div>
+                </div>
+                <div class="formula"><b>Defaults:</b> Ts = 1.0 s, ζ = 0.70.<br><b>Automatic tuning range:</b> Ts = 1.0–1.5 s; ζ = 0.60–0.80.</div>
+            </div>
+            <!-- Step 3: natural frequency -->
+            <div class="step">
+                <div class="step-head"><span class="number">3</span><h2>Calculate natural frequency (ωn)</h2></div>
+                <p class="explain">The selected settling-time goal and damping ratio give an approximate natural frequency.</p>
+                <div class="formula">ωn ≈ 4 / (ζ × Ts)<div id="wnCalculation" class="note">Enter specifications and run the initial design.</div></div>
+                <div class="results"><div class="result"><div class="k">Natural frequency</div><div class="v" id="wnValue">—</div><div class="sub">rad/s</div></div></div>
+            </div>
+            <!-- Step 4: PI gains -->
+            <div class="step">
+                <div class="step-head"><span class="number">4</span><h2>Calculate PI gains — separately for each motor</h2></div>
+                <div class="formula"><b>Proportional gain:</b> Kp = (2ζωnτ − 1) / K<br><b>Integral gain:</b> Ki = (τ × ωn²) / K<br><b>Derivative gain:</b> Kd = 0 (PI, not PID)</div>
+                <div class="results" id="gainCards"></div>
+                <div class="actions"><button id="calculateBtn">Calculate PI gains</button></div>
+                <div id="gainStatus" class="status">Identify both motors first, then calculate the gains here.</div>
+            </div>
+            <!-- Step 5: simulation -->
+            <div class="step">
+                <div class="step-head"><span class="number">5</span><h2>Run closed-loop simulation</h2></div>
+                <p class="explain">The PI controller compares target RPM to measured RPM, changes PWM, and repeats. Simulation uses Euler integration, PWM clamping (0–100%) and anti-windup.</p>
+                <div class="formula">Error = Target RPM − Motor RPM<br>PWM = clamp(Kp × Error + Ki × Integral, 0%, 100%)</div>
+                <div class="actions"><button id="runBtn">Run PI simulation</button></div>
+                <div id="designStatus" class="status">Start with Step 1. Results appear below after simulation.</div>
+            </div>
+            <!-- Step 6: metrics -->
+            <div class="step">
+                <div class="step-head"><span class="number">6</span><h2>Performance metrics</h2></div>
+                <p class="explain">These values are measured from the simulated speed response, not guessed from the gain formulas. Settling uses a ±2% band.</p>
+                <div id="metricArea"><p class="note">No simulation results yet.</p></div>
+                <details><summary>How are the metrics calculated?</summary>
+                    <p class="note">Overshoot (%) = max(0, (peak RPM − target RPM) / target RPM × 100).<br>
+                    Steady-state error (%) = |last RPM − target RPM| / target RPM × 100.<br>
+                    Settling time = first time after which the RPM stays inside target ±2% for the rest of the simulation.<br>
+                    Rise time = time from first reaching 10% to first reaching 90% of target.<br>
+                    Clamped PWM stays between 0% and 100%; saturation is reported separately.</p>
+                </details>
+            </div>
+            <!-- Step 7: auto tuning -->
+            <div class="step">
+                <div class="step-head"><span class="number">7</span><h2>Automatic PI tuning — if needed</h2></div>
+                <p class="explain">If the initial simulation fails, the system automatically tests 30 Ts/ζ combinations, recalculates the PI gains for both motors, and shows the selected values. If none pass, the result remains marked as failed.</p>
+                <div id="tuneStatus" class="status">Automatic tuning runs only when the initial simulation fails.</div>
+            </div>
+            <!-- Step 8: graphs -->
+            <div class="step">
+                <div class="step-head"><span class="number">8</span><h2>Simulation results — speed & PWM graphs</h2></div>
+                <p class="explain">Speed vs target shows tracking and settling. PWM vs time shows what the controller sends to each motor.</p>
+                <div id="speedPlot" class="plot"></div>
+                <div id="pwmPlot" class="plot"></div>
+            </div>
+        </section>
+        <!-- ===== RIGHT: Arduino code ===== -->
+        <section class="card sticky">
+            <div class="code-header"><h2 class="card-title">Generated Arduino Code</h2><button class="alt" id="copyBtn">Copy</button></div>
+            <p class="explain">Your final ESP32 code appears here after running the PI simulation.</p>
+            <div class="actions">
+                <button id="generateBtn" disabled>Generate / Regenerate Code</button>
+                <button class="alt" id="downloadBtn" disabled>Download .ino</button>
+            </div>
+            <div id="codeStatus" class="status">Run the PI simulation to generate code.</div>
+            <textarea class="code" id="code" readonly spellcheck="false">// Generated code will appear here.</textarea>
+            <details style="margin-top: 16px"><summary>Hardware &amp; pin settings (edit if needed)</summary>
+                <p class="explain">These are proposed ESP32 connections. Change any GPIO, then click Generate / Regenerate Code above.</p>
+                <h3>Hardware used for code generation</h3>
+                <table>
+                    <tr><th>Part</th><th>Assumed hardware</th></tr>
+                    <tr><td>Microcontroller</td><td>ESP32 ESP-WROOM-32, 30-pin board</td></tr>
+                    <tr><td>Motor driver</td><td>DRV8833, dual DC motor channels</td></tr>
+                    <tr><td>Left & right motors</td><td>2 × GA12-N20 DC gear motors</td></tr>
+                    <tr><td>Speed feedback</td><td>Quadrature encoder on each motor</td></tr>
+                    <tr><td>Control method</td><td>Independent PI speed loop per motor</td></tr>
+                </table>
+                <h3>Suggested wiring — editable</h3>
+                <p class="explain">The following are <b>example GPIO numbers</b>, not confirmed wiring. Change them to match your robot, then press <b>Regenerate Arduino code</b>.</p>
+                <div class="fields" id="pins"></div>
+            </details>
+        </section>
+    </div>
+</div>
+<script>
+    // ===== 1. Settings and helpers =====
+    const SIM_DT = 0.01;       // simulation step (s)
+    const SIM_DURATION = 8;    // simulation length (s)
+
+    // Short names: $("id") = the element, val("id") = its value as a number
+    const $ = id => document.getElementById(id);
+    const val = id => Number($(id).value);
+    const setText = (id, text) => $(id).textContent = text;
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const fmt = (n, d = 3) => Number.isFinite(n) ? n.toFixed(d) : "Not reached";
+    const setStatus = (id, msg, type = "") => { $(id).className = "status " + type; setText(id, msg); };
+
+    // Result boxes: card(["Title", "Value", "small text"])
+    const card = ([k, v, sub = ""]) => `<div class="result"><div class="k">${k}</div><div class="v">${v}</div><div class="sub">${sub}</div></div>`;
+    const cards = list => list.map(card).join("");
+
+    // What the page remembers
+    let plants = null;       // K and tau of each motor (Step 1)
+    let calculated = null;   // gains from Step 4
+    let design = null;       // result of the last simulation
+    let isDemo = false;      // true while demo data is loaded
+
+    // ===== 2. Graphs =====
+    function plot(id, traces, title, ytitle) {
+        if (typeof Plotly === "undefined") {
+            setStatus("designStatus", "Plotly could not load. Check your internet connection for graphs.", "warn");
+            return;
+        }
+        Plotly.react(id, traces, {
+            title: { text: title, font: { size: 13, color: "#17365d" } },
+            margin: { l: 55, r: 15, t: 42, b: 40 },
+            font: { size: 11 },
+            xaxis: { title: "Time (s)", gridcolor: "#edf1f7" },
+            yaxis: { title: ytitle, gridcolor: "#edf1f7" },
+            legend: { orientation: "h", y: 1.2, x: 0 }
+        }, { responsive: true, displayModeBar: false });
+    }
+
+    // ===== 3. Step 1: read the data, find K and tau =====
+    // Text box -> [{t, rpm}, ...]  (accepts comma, tab or ;)
+    function parseCSV(text) {
+        const pts = [];
+        for (const line of text.trim().split(/\r?\n/)) {
+            const [t, rpm] = line.split(/[,\t;]+/).map(Number);
+            if (Number.isFinite(t) && Number.isFinite(rpm)) pts.push({ t, rpm });
+        }
+        pts.sort((a, b) => a.t - b.t);
+        if (pts.length < 8 || pts.some((p, i) => i && p.t <= pts[i - 1].t))
+            throw Error("Each motor needs at least 8 valid time/RPM readings with unique times.");
+        return pts;
+    }
+
+    // K = speed change / PWM change.  tau = time to reach 63.2% of the change.
+    function identifyMotor(points, du) {
+        const n = Math.max(2, Math.floor(points.length * 0.1));
+        const y0 = points[0].rpm;                                         // start speed
+        const yf = points.slice(-n).reduce((s, p) => s + p.rpm, 0) / n;   // final speed (average of last 10%)
+        const dy = yf - y0, K = dy / du;
+        if (!(K > 0 && dy > 5)) throw Error("Speed must increase clearly after the positive PWM step.");
+        const level = y0 + 0.6321205588 * dy;
+        let tau = NaN;
+        for (let i = 1; i < points.length; i++) {
+            const a = points[i - 1], b = points[i];
+            if (a.rpm <= level && b.rpm >= level && b.rpm > a.rpm) {     // crossing found -> interpolate
+                tau = a.t + (level - a.rpm) * (b.t - a.t) / (b.rpm - a.rpm) - points[0].t;
+                break;
+            }
+        }
+        if (!(tau > 0)) throw Error("Could not estimate τ. Record the response from the PWM step until it settles.");
+        return { K, tau, points };
+    }
+
+    // Forget old results when an input changes
+    function resetDesign() {
+        design = calculated = null;
+        $("generateBtn").disabled = $("downloadBtn").disabled = true;
+        setStatus("designStatus", "Inputs changed. Calculate the gains in Step 4, then simulate in Step 5.");
+        setStatus("gainStatus", "Inputs changed. Click Calculate PI gains again.");
+    }
+
+    function identify() {
+        try {
+            const before = val("pwmBefore"), after = val("pwmAfter"), du = after - before;
+            if (!(before >= 0 && after <= 100 && du > 0))
+                throw Error("Use a positive PWM step with both values between 0% and 100%.");
+            const left = identifyMotor(parseCSV($("leftCSV").value), du);
+            const right = identifyMotor(parseCSV($("rightCSV").value), du);
+            plants = { left, right };
+            resetDesign();
+            $("plantResults").hidden = false;
+            $("plantCards").innerHTML = cards([
+                ["LEFT MOTOR — Gain K", fmt(left.K), "RPM per 1% PWM"],
+                ["LEFT MOTOR — Time constant τ", fmt(left.tau) + " s", "Seconds to 63.2% of the change"],
+                ["RIGHT MOTOR — Gain K", fmt(right.K), "RPM per 1% PWM"],
+                ["RIGHT MOTOR — Time constant τ", fmt(right.tau) + " s", "Seconds to 63.2% of the change"]
+            ]);
+            $("plantModels").innerHTML =
+                `<div>Left: G<sub>L</sub>(s) = ${fmt(left.K)} / (${fmt(left.tau)}s + 1)</div>` +
+                `<div>Right: G<sub>R</sub>(s) = ${fmt(right.K)} / (${fmt(right.tau)}s + 1)</div>`;
+            setStatus("identStatus", (isDemo ? "DEMO DATA ONLY — " : "") +
+                "K and τ calculated for both motors. Replace example data with real encoder measurements before hardware use.", "ok");
+            const line = (m, name) => ({ x: m.points.map(p => p.t), y: m.points.map(p => p.rpm), name, mode: "lines+markers", marker: { size: 3 } });
+            plot("stepPlot", [line(left, "Left RPM"), line(right, "Right RPM")], "Measured open-loop speed", "RPM");
+        } catch (e) {
+            plants = null;
+            $("plantResults").hidden = true;
+            resetDesign();
+            setStatus("identStatus", e.message, "bad");
+        }
+    }
+
+    // Fake first-order motor data, just to try the page
+    function loadDemo() {
+        isDemo = true;
+        $("pwmBefore").value = 0;
+        $("pwmAfter").value = 50;
+        const fake = (k, tau) => "time_s,rpm\n" + Array.from({ length: 81 }, (_, i) => {
+            const t = i * 0.05;
+            return `${t.toFixed(2)},${(k * 50 * (1 - Math.exp(-t / tau))).toFixed(4)}`;
+        }).join("\n");
+        $("leftCSV").value = fake(3.0, 0.38);
+        $("rightCSV").value = fake(2.95, 0.42);
+        identify();
+    }
+
+    // ===== 4. Steps 3-4: PI gains =====
+    // Returns null when a gain is negative or invalid
+    function calculateGains(ts, zeta, p) {
+        const wn = 4 / (zeta * ts);
+        const kp = (2 * zeta * wn * p.tau - 1) / p.K;
+        const ki = p.tau * wn * wn / p.K;
+        return (kp >= 0 && ki > 0 && Number.isFinite(kp + ki)) ? { kp, ki, wn } : null;
+    }
+
+    // ===== 5. Step 5: closed-loop simulation =====
+    function simulate(p, g, target) {
+        let y = 0, integral = 0;
+        const t = [], rpm = [], pwm = [];
+        for (let i = 0; i <= Math.round(SIM_DURATION / SIM_DT); i++) {
+            const error = target - y;
+            // Anti-windup: stop integrating while PWM is stuck at a limit
+            const nextIntegral = integral + error * SIM_DT;
+            const trial = g.kp * error + g.ki * nextIntegral;
+            if (!((trial > 100 && error > 0) || (trial < 0 && error < 0))) integral = nextIntegral;
+            const u = clamp(g.kp * error + g.ki * integral, 0, 100);
+            t.push(i * SIM_DT); rpm.push(y); pwm.push(u);
+            y += SIM_DT * (p.K * u - y) / p.tau;                            // motor model (Euler)
+            if (!Number.isFinite(y)) throw Error("Simulation became unstable.");
+        }
+        // Metrics
+        const overshoot = Math.max(0, (Math.max(...rpm) - target) / target * 100);
+        const errorPct = Math.abs(rpm.at(-1) - target) / target * 100;
+        let lastOutside = -1;                                              // last sample outside the ±2% band
+        rpm.forEach((v, i) => { if (Math.abs(v - target) > 0.02 * target) lastOutside = i; });
+        const settling = lastOutside >= rpm.length - 1 ? Infinity : lastOutside < 0 ? 0 : t[lastOutside + 1];
+        const crossing = ratio => {                                        // time when RPM first reaches ratio * target
+            for (let i = 1; i < rpm.length; i++)
+                if (rpm[i] >= ratio * target && rpm[i - 1] < ratio * target)
+                    return t[i - 1] + (ratio * target - rpm[i - 1]) * (t[i] - t[i - 1]) / (rpm[i] - rpm[i - 1]);
+            return Infinity;
+        };
+        const rise = crossing(0.9) - crossing(0.1);
+        const saturation = pwm.filter(v => v <= 0.001 || v >= 99.999).length / pwm.length * 100;
+        return { t, rpm, pwm, settling, overshoot, errorPct, rise, saturation, feasible: target <= p.K * 100 };
+    }
+
+    // Design + simulate both motors. Pass = reachable speed, fast enough, final error <= 2%
+    function evaluate(ts, zeta) {
+        const target = val("targetRPM");
+        if (!(target > 0 && ts > 0 && zeta >= 0.6 && zeta <= 0.8))
+            throw Error("Target RPM and Ts must be positive; ζ must be between 0.6 and 0.8.");
+        if (!plants) throw Error("Identify both motors first.");
+        const gl = calculateGains(ts, zeta, plants.left), gr = calculateGains(ts, zeta, plants.right);
+        if (!gl || !gr) return null;
+        const left = simulate(plants.left, gl, target), right = simulate(plants.right, gr, target);
+        const pass = [left, right].every(x => x.feasible && x.settling <= ts && x.errorPct <= 2);
+        return { ts, zeta, wn: gl.wn, target, left, right, gl, gr, pass };
+    }
+
+    // ===== 6. Showing results on the page =====
+    // Fills ωn and the 4 gain boxes (no argument = empty boxes)
+    function showGains(d) {
+        const v = d ? [d.gl.kp, d.gl.ki, d.gr.kp, d.gr.ki].map(x => fmt(x)) : ["—", "—", "—", "—"];
+        $("gainCards").innerHTML = cards(["LEFT — Kp", "LEFT — Ki", "RIGHT — Kp", "RIGHT — Ki"].map((name, i) => [name, v[i]]));
+        if (!d) return;
+        setText("wnValue", fmt(d.wn));
+        setText("wnCalculation", `ωn = 4 / (${fmt(d.zeta, 2)} × ${fmt(d.ts, 2)}) = ${fmt(d.wn)} rad/s`);
+    }
+
+    const motorMetrics = (title, m) => `<h3>${title}</h3><div class="results">` + cards([
+        ["Actual settling time", fmt(m.settling), "seconds"],
+        ["Overshoot", fmt(m.overshoot) + "%", "peak above target"],
+        ["Steady-state error", fmt(m.errorPct) + "%", "at end of simulation"],
+        ["Rise time (10–90%)", fmt(m.rise), "seconds"]
+    ]) + "</div>";
+
+    // origin = "initial" (your Ts and ζ) or "auto" (picked by auto-tuning)
+    function render(d, origin) {
+        design = d;
+        const auto = origin === "auto";
+        const askedTs = val("desiredTs"), askedZeta = val("desiredZeta");
+        showGains(d);
+        // Metrics
+        const autoNote = auto ? `<div class="status warn"><b>Automatic tuning applied:</b> Initial design failed. Selected Ts = ${fmt(d.ts, 2)} s and ζ = ${fmt(d.zeta, 2)}; original Ts = ${fmt(askedTs, 2)} s and ζ = ${fmt(askedZeta, 2)}. The gains and graphs below use the tuned values. ${d.pass ? "Tuned design meets its selected targets." : "No candidate met all targets."}</div>` : "";
+        const limited = d.left.saturation > 20 || d.right.saturation > 20;
+        $("metricArea").innerHTML = autoNote + motorMetrics("Left motor", d.left) + motorMetrics("Right motor", d.right) +
+            `<div class="formula"><b>PWM limit:</b> Left motor ${fmt(d.left.saturation, 1)}% of the simulation; right motor ${fmt(d.right.saturation, 1)}% of the simulation at the minimum or maximum PWM (0% or 100%). ${limited ? "This means the controller spends significant time at its output limit." : "The controller stays within the allowed PWM range."}</div>`;
+        // Graphs
+        plot("speedPlot", [
+            { x: d.left.t, y: d.left.rpm, name: "Left RPM", line: { color: "#3478c0" } },
+            { x: d.right.t, y: d.right.rpm, name: "Right RPM", line: { color: "#1c8b75" } },
+            { x: [0, SIM_DURATION], y: [d.target, d.target], name: "Target RPM", line: { color: "#d58b21", dash: "dash" } }
+        ], "Closed-loop speed vs target", "RPM");
+        plot("pwmPlot", [
+            { x: d.left.t, y: d.left.pwm, name: "Left PWM", line: { color: "#3478c0" } },
+            { x: d.right.t, y: d.right.pwm, name: "Right PWM", line: { color: "#1c8b75" } }
+        ], "PWM command (0–100%)", "PWM (%)");
+        // Messages
+        const changed = auto && Math.abs(d.ts - askedTs) > 0.00001
+            ? ` Automatic tuning selected Ts=${fmt(d.ts, 2)} s instead of your entered Ts=${fmt(askedTs, 2)} s. This relaxes/changes the original goal.` : "";
+        setStatus("designStatus",
+            `${auto ? "Automatic PI search" : "Initial PI design"}: ${d.pass ? "PASS for the selected candidate" : "NOT ALL TARGETS MET"}. Target speed ${fmt(d.target, 0)} RPM; designed Ts=${fmt(d.ts, 2)} s, ζ=${fmt(d.zeta, 2)}. Both motors are evaluated separately.${changed}${isDemo ? " DEMO measurements are synthetic." : ""}`,
+            d.pass ? "ok" : "warn");
+        $("generateBtn").disabled = false;
+        $("downloadBtn").disabled = true;
+        setStatus("codeStatus", d.pass ? "Design ready for code generation." : "Simulation did not meet all targets; generated code needs review.", "warn");
+    }
+
+    // ===== 7. Buttons of Steps 4, 5 and 7 =====
+    // Step 4: gains only, no simulation yet
+    function calculateOnly() {
+        try {
+            const d = evaluate(val("desiredTs"), val("desiredZeta"));
+            if (!d) throw Error("Calculated Kp is negative for at least one motor. Adjust the design specifications.");
+            calculated = d;
+            showGains(d);
+            setStatus("gainStatus", "PI gains calculated for both motors. Continue to Step 5 to run the simulation.", "ok");
+        } catch (e) { calculated = null; setStatus("gainStatus", e.message, "bad"); }
+    }
+
+    // Step 5: show the simulation; if it fails, auto-tune
+    function runInitial() {
+        try {
+            if (!calculated) throw Error("Click Calculate PI gains in Step 4 first.");
+            render(calculated, "initial");
+            if (calculated.pass) setStatus("tuneStatus", "Initial simulation passed. Automatic tuning was not needed.", "ok");
+            else autoTune();
+        } catch (e) { resetDesign(); setStatus("designStatus", e.message, "bad"); }
+    }
+
+    // Step 7: try Ts = 1.0..1.5 (6 values) x ζ = 0.60..0.80 (5 values) = 30 combinations
+    function autoTune() {
+        try {
+            const options = [];
+            for (let i = 0; i <= 5; i++)
+                for (let j = 0; j <= 4; j++) {
+                    const d = evaluate(+(1 + i * 0.1).toFixed(2), +(0.6 + j * 0.05).toFixed(2));
+                    if (d) options.push(d);
+                }
+            if (!options.length) throw Error("No candidates with nonnegative Kp for both motors.");
+            // Best = passing first, then fastest settling, then smallest overshoot
+            const slowest = d => Math.max(d.left.settling, d.right.settling);
+            const finite = x => Number.isFinite(x) ? x : 1e6;
+            const worstOvershoot = d => Math.max(d.left.overshoot, d.right.overshoot);
+            options.sort((a, b) => Number(b.pass) - Number(a.pass) ||
+                finite(slowest(a)) - finite(slowest(b)) || worstOvershoot(a) - worstOvershoot(b));
+            const best = options[0];
+            render(best, "auto");
+            setStatus("tuneStatus",
+                `Automatic tuning ran because the initial design failed. ${options.length} valid candidates tested. Selected Ts=${fmt(best.ts, 2)} s and ζ=${fmt(best.zeta, 2)}. ${best.pass ? "Tuned design passes its selected targets." : "No candidate passed; review constraints."}`,
+                best.pass ? "ok" : "warn");
+        } catch (e) { setStatus("tuneStatus", e.message, "bad"); }
+    }
+
+    // ===== 8. Arduino code generator =====
+    // [input id, label, default GPIO]
+    const pinList = [
+        ["lEA", "Left Encoder A", 18], ["lEB", "Left Encoder B", 19],
+        ["rEA", "Right Encoder A", 21], ["rEB", "Right Encoder B", 22],
+        ["lIN1", "DRV8833 AIN1", 25], ["lIN2", "DRV8833 AIN2", 26],
+        ["rIN1", "DRV8833 BIN1", 27], ["rIN2", "DRV8833 BIN2", 14]
+    ];
+    const pinIds = pinList.map(p => p[0]);
+    const allowedPins = new Set([4, 5, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33]);
+
+    $("pins").innerHTML = pinList.map(([id, name, gpio]) =>
+        `<div><label>${name} → GPIO</label><input id="${id}" type="number" value="${gpio}"></div>`).join("");
+
+    function generate() {
+        if (!design) return;
+        const pins = pinIds.map(val);
+        if (pins.some(x => !allowedPins.has(x)) || new Set(pins).size !== pins.length) {
+            setStatus("codeStatus", "Invalid wiring: use 8 different GPIOs from 4,5,13,14,16–19,21–23,25–27,32,33. ", "bad");
+            return;
+        }
+        const [la, lb, ra, rb, li1, li2, ri1, ri2] = pins;
+        const d = design, COUNTS = 600, SAMPLE_MS = 20;   // COUNTS = encoder counts per wheel turn (placeholder)
+        $("code").value = `// ESP32 + DRV8833 | Two-motor PI speed control
+// ${isDemo ? "DEMO GAINS — NOT FOR REAL HARDWARE" : "Measured motor gains"} | ${d.pass ? "Simulation passed" : "Review simulation results"}
+#include <Arduino.h>
+// ---- Pins ----
+const int L_ENC_A=${la}, L_ENC_B=${lb};
+const int R_ENC_A=${ra}, R_ENC_B=${rb};
+const int AIN1=${li1}, AIN2=${li2};
+const int BIN1=${ri1}, BIN2=${ri2};
+// ---- Settings (replace counts with verified values) ----
+const float L_COUNTS_PER_WHEEL_REV=${COUNTS}.0f;
+const float R_COUNTS_PER_WHEEL_REV=${COUNTS}.0f;
+const unsigned long SAMPLE_MS=${SAMPLE_MS};
+const float L_KP=${d.gl.kp.toPrecision(9)}f, L_KI=${d.gl.ki.toPrecision(9)}f;
+const float R_KP=${d.gr.kp.toPrecision(9)}f, R_KI=${d.gr.ki.toPrecision(9)}f;
+const float L_TARGET_RPM=${d.target.toFixed(2)}f;
+const float R_TARGET_RPM=${d.target.toFixed(2)}f;
+// ---- State ----
+volatile long leftTicks=0, rightTicks=0;
+float leftIntegral=0, rightIntegral=0;
+unsigned long previousMs=0;
+// Encoder interrupts: count +1 or -1 depending on direction
+void IRAM_ATTR leftISR(){
+  leftTicks += (digitalRead(L_ENC_A)==digitalRead(L_ENC_B)) ? 1 : -1;
+}
+void IRAM_ATTR rightISR(){
+  rightTicks += (digitalRead(R_ENC_A)==digitalRead(R_ENC_B)) ? 1 : -1;
+}
+// PI controller: returns PWM 0-100%, with anti-windup
+float piControl(float target, float measured, float dt,
+                float kp, float ki, float &integral){
+  float e=target-measured;
+  float nextIntegral=integral+e*dt;
+  float requested=kp*e+ki*nextIntegral;
+  if (!((requested>100.0f&&e>0)||(requested<0.0f&&e<0)))
+    integral=nextIntegral;
+  return constrain(kp*e+ki*integral,0.0f,100.0f);
+}
+// Spin one motor forward at the given PWM percent
+void driveForward(int pwmPin,int otherPin,float percent){
+  digitalWrite(otherPin,LOW);
+  int duty=(int)roundf(constrain(percent,0.0f,100.0f)*255.0f/100.0f);
+  ledcWrite(pwmPin,duty);
+}
+void setup(){
+  Serial.begin(115200);
+  pinMode(L_ENC_A,INPUT_PULLUP); pinMode(L_ENC_B,INPUT_PULLUP);
+  pinMode(R_ENC_A,INPUT_PULLUP); pinMode(R_ENC_B,INPUT_PULLUP);
+  pinMode(AIN2,OUTPUT); pinMode(BIN2,OUTPUT);
+  digitalWrite(AIN2,LOW); digitalWrite(BIN2,LOW);
+  ledcAttach(AIN1,20000,8); ledcAttach(BIN1,20000,8);
+  ledcWrite(AIN1,0); ledcWrite(BIN1,0);
+  attachInterrupt(digitalPinToInterrupt(L_ENC_A),leftISR,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(R_ENC_A),rightISR,CHANGE);
+  previousMs=millis();
+}
+void loop(){
+  unsigned long now=millis();
+  if(now-previousMs<SAMPLE_MS)return;          // run once every SAMPLE_MS
+  float dt=(now-previousMs)/1000.0f;
+  previousMs=now;
+  // Read and reset the encoder counts
+  noInterrupts();
+  long l=leftTicks,r=rightTicks;
+  leftTicks=0;rightTicks=0;
+  interrupts();
+  // Counts -> RPM
+  float lRPM=(l/L_COUNTS_PER_WHEEL_REV)*60.0f/dt;
+  float rRPM=(r/R_COUNTS_PER_WHEEL_REV)*60.0f/dt;
+  // PI -> PWM -> motors
+  float lPWM=piControl(L_TARGET_RPM,lRPM,dt,L_KP,L_KI,leftIntegral);
+  float rPWM=piControl(R_TARGET_RPM,rRPM,dt,R_KP,R_KI,rightIntegral);
+  driveForward(AIN1,AIN2,lPWM);
+  driveForward(BIN1,BIN2,rPWM);
+  Serial.print("Left RPM:");Serial.print(lRPM);
+  Serial.print(", Right RPM:");Serial.print(rRPM);
+  Serial.print(", Left PWM:");Serial.print(lPWM);
+  Serial.print(", Right PWM:");Serial.println(rPWM);
+}
+// Check wiring and encoder counts before testing.`;
+        $("downloadBtn").disabled = false;
+        setStatus("codeStatus", (isDemo ? "DEMO ONLY. " : "") +
+            `Generated independent PI loops for both motors using Ts=${fmt(d.ts, 2)} s and ζ=${fmt(d.zeta, 2)}. ${d.pass ? "Simulation passed." : "Simulation did not pass all criteria."} Confirm hardware wiring and encoder calibration.`,
+            d.pass && !isDemo ? "ok" : "warn");
+    }
+
+    // ===== 9. Buttons and events =====
+    $("identifyBtn").onclick = identify;
+    $("demoBtn").onclick = loadDemo;
+    $("calculateBtn").onclick = calculateOnly;
+    $("runBtn").onclick = runInitial;
+    $("generateBtn").onclick = generate;
+
+    $("clearBtn").onclick = () => {
+        isDemo = false;
+        plants = design = calculated = null;
+        $("leftCSV").value = $("rightCSV").value = "";
+        $("plantResults").hidden = true;
+        $("generateBtn").disabled = $("downloadBtn").disabled = true;
+        setStatus("identStatus", "Waiting for real measurements.");
+        setStatus("designStatus", "Identify the motors and run a PI simulation.");
+        setStatus("tuneStatus", "No tuning performed yet.");
+        $("metricArea").innerHTML = '<p class="note">No simulation results yet.</p>';
+        if (typeof Plotly !== "undefined") ["stepPlot", "speedPlot", "pwmPlot"].forEach(id => Plotly.purge(id));
+    };
+
+    $("copyBtn").onclick = async () => {
+        try {
+            await navigator.clipboard.writeText($("code").value);
+            setText("copyBtn", "Copied");
+            setTimeout(() => setText("copyBtn", "Copy"), 1300);
+        } catch (e) { $("code").select(); document.execCommand("copy"); }   // fallback for old browsers
+    };
+
+    $("downloadBtn").onclick = () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([$("code").value], { type: "text/plain" }));
+        a.download = "micromouse_esp32_two_motor_pi.ino";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
+
+    // New measurements -> forget the old motor model
+    ["leftCSV", "rightCSV", "pwmBefore", "pwmAfter"].forEach(id => $(id).addEventListener("input", () => {
+        isDemo = false;
+        plants = null;
+        $("plantResults").hidden = true;
+        resetDesign();
+        setStatus("identStatus", "Measurements changed. Click Calculate K & τ again.");
+    }));
+
+    // New specs -> forget the old gains
+    ["targetRPM", "desiredTs", "desiredZeta"].forEach(id => $(id).addEventListener("input", resetDesign));
+
+    // New pins -> the old code is outdated
+    pinIds.forEach(id => $(id).addEventListener("input", () => {
+        $("downloadBtn").disabled = true;
+        setStatus("codeStatus", "Hardware configuration changed. Press Generate / Regenerate Arduino code to update the sketch.");
+    }));
+
+    showGains();    // draw the empty gain boxes when the page loads
+</script>
+</body>
+</html>
